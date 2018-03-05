@@ -44,7 +44,7 @@ def learn():
     # counter
     step = 5e-4
     i = 0
-    while i < 4:
+    while i < 3:
         if ts1.value() or ts2.value():
             i += 1
             lm.duty_cycle_sp = 0
@@ -56,7 +56,7 @@ def learn():
         elif i == 1:
             mc.k_d += step
             print('KD: ', mc.k_d)
-        elif i == 3:
+        elif i == 2:
             mc.k_i += step
             print('KI: ', mc.k_i)
         color_values = cs.get_rgb()     # get color values from color sensor
