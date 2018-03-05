@@ -1,7 +1,5 @@
-import ev3dev.ev3 as ev3
-
-
 # TODO: implement mixing from battery
+
 
 class MotorMixer:
     def __init__(self, throttle, minimum, maximum):
@@ -10,8 +8,8 @@ class MotorMixer:
         self.max = maximum
 
     def run(self, rudder):
-        left = self.throttle - rudder
-        right = self.throttle + rudder
+        left = self.throttle + rudder
+        right = self.throttle - rudder
         speed = self.compensate(left, right)
         return speed
 

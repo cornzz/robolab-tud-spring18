@@ -15,10 +15,11 @@ class AbstractController(ABC):
         # set derivative error
         d_error = error - self.previous_error
         print('error: ', error)
+        print('ierror: ', self.i_error)
         result = (self.k_p * error) + (self.k_i * self.i_error) + (self.k_d * d_error)
         print('ctrl: ', result)
         self.previous_error = error
-        self.i_error = min(self.i_max, self.i_error + error)
+        self.i_error = max(-self.i_max, min(self.i_max, self.i_error + error))
         return result
 
     @abstractmethod

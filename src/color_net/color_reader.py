@@ -5,7 +5,7 @@ from color_net import CSVWriter
 
 
 def run():
-    writer = CSVWriter.CSVWriter('testing')
+    writer = CSVWriter.CSVWriter('training')
     cs = ColorSensor.ColorSensor()
     ts1 = ev3.TouchSensor('in2')
     ts2 = ev3.TouchSensor('in4')
