@@ -1,4 +1,4 @@
-from pid_controller import Controller
+import src.pid_controller.Controller as Controller
 
 
 class MotorController(Controller.AbstractController):
