@@ -18,8 +18,7 @@ class ColorSensor:
     def get_rgb(self):
         return self.cs.bin_data('hhh')
 
-    def get_hsv(self):
-        value = self.get_rgb()
+    def get_hsv(self, value):
         r = map_to_range(value[0], 0, 480, 0, 1)
         g = map_to_range(value[1], 0, 480, 0, 1)
         b = map_to_range(value[2], 0, 480, 0, 1)
@@ -27,7 +26,7 @@ class ColorSensor:
 
     def get_all(self):
         rgb = self.get_rgb()
-        hsv = self.get_hsv()
+        hsv = self.get_hsv(rgb)
         # color     s > 0.68
         # blue      h > 0.3
         # red       h <= 0.1
