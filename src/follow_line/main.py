@@ -14,7 +14,7 @@ k_p = 0.62
 k_i = 0.15
 k_d = 0.20
 i_max = 40
-color_setpoint = 300
+color_setpoint = 330
 speed_max = 100
 speed_min = -100
 base_speed = 30
@@ -50,7 +50,7 @@ def run():
 def learn():
     # use this loop to tune PID factors
     mixer = MotorMixer.MotorMixer(base_speed, speed_min, speed_max)
-    mc = MotorController.MotorController(0, 0, 0, 40, color_setpoint)
+    mc = MotorController.MotorController(0, 0, 0, i_max, color_setpoint)
     # counter
     step = 5e-4
     i = 0
@@ -68,12 +68,13 @@ def learn():
         elif i == 2:
             mc.k_i += step
             print('KI: ', mc.k_i)
-        color_values = cs.get_rgb()     # get color values from color sensor
-        rudder = mc.run(color_values)   # calculate rudder from color values
+        colors = cs.get_all()
+        rgb = colors[0]  # get rgb values from color sensor
+        rudder = mc.run(rgb)  # calculate rudder from color values
         speed = mixer.run(rudder)       # divide the rudder speed on the motors
         lm.duty_cycle_sp = speed[0]
         rm.duty_cycle_sp = speed[1]
-        print('speed: ', speed[0], speed[1])
+        # print('speed: ', speed[0], speed[1])
     stop_motors()
     print(mc.k_p, mc.k_i, mc.k_d)
     pass
