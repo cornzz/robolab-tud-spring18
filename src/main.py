@@ -1,4 +1,4 @@
-import src.follow_line.main as follow_line
+import follow_line.main as follow_line
 
 
 def run():
