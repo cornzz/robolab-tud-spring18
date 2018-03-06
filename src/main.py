@@ -1,6 +1,6 @@
 from .events.EventRegistry import EventRegistry
 from .pilot.ColorSensor import ColorSensor
-from src.pilot.Pilot import Pilot
+from .pilot.Pilot import Pilot
 import ev3dev.ev3 as ev3
 
 # init ev3

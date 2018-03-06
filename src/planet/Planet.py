@@ -1,4 +1,5 @@
-from src.shortest_path import Graph, Edge, Vertex, Path
+from . import Graph, Edge, Path
+from src.planet import Vertex
 from enum import unique, IntEnum
 from typing import Tuple
 

@@ -1,4 +1,4 @@
-from src.shortest_path.Vertex import Vertex
+from src.planet.Vertex import Vertex
 
 
 class Path:
