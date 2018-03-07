@@ -1,5 +1,5 @@
-from src.events.EventHandler import EventHandler
-from src.events.Singleton import Singleton
+from .EventHandler import EventHandler
+from .Singleton import Singleton
 
 
 @Singleton

@@ -1,9 +1,11 @@
-from src.events.EventNames import EventNames
-from src.events.EventRegistry import EventRegistry
+from events.EventNames import EventNames
+from events.EventRegistry import EventRegistry
+from events.EventList import EventList
+from .ColorSensor import ColorSensor
 from .MotorController import MotorController
 from .MotorMixer import MotorMixer
 from .PilotModes import PilotModes
-from src.planet import Planet
+from planet import Planet
 from ev3dev import ev3
 from typing import Tuple
 import time
@@ -24,24 +26,30 @@ class Pilot:
     # simple or complex maneuvers (follow line, turn, stop, ...) are defined as methods
     # PILOT_MODE decides which maneuver is called in the main loop
 
-    def __init__(self, lm, rm):
+    def __init__(self, lm, rm, cs: ColorSensor):
         self.current_vertex = None
         self.position = (0, 0)
         self.planet = Planet.Planet([], [])
         self.lm = lm
         self.rm = rm
+        self.cs = cs
         self.color = None
+        self.rbd = None
+        self.touch = False
         self.mode = PilotModes.FOLLOW_LINE
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
+        self.events = EventList()
+        self.events.add('NEW_PATH')
         EventRegistry.instance().register_event_handler(EventNames.PILOT_MODE, self.set_mode)
-        EventRegistry.instance().register_event_handler(EventNames.COLORS, self.set_color)
+        EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
+        EventRegistry.instance().register_event_handler(EventNames.TOUCH, self.set_touch)
         pass
 
     def run(self):
         if self.mode is PilotModes.FOLLOW_LINE:
             self.follow_line()
-        elif self.mode is PilotModes.HOVER_PATH:
+        elif self.mode is PilotModes.HOVER_PATCH:
             self.hover_patch()
         elif self.mode is PilotModes.CHECK_ISC:
             self.check_isc()
@@ -55,14 +63,15 @@ class Pilot:
         pass
 
     def follow_line(self):
-        self.lm.command = 'run-direct'
-        self.rm.command = 'run-direct'
-        # calculate rudder from rgb mean
-        rudder = self.mc.run(self.color)
-        # divide the rudder speed on the motors
-        speed = self.mixer.run(rudder)
-        self.set_speed(speed)
-        # print(speed)
+        if self.color is not None:
+            self.lm.command = 'run-direct'
+            self.rm.command = 'run-direct'
+            # calculate rudder from rgb mean
+            rudder = self.mc.run(self.color)
+            # divide the rudder speed on the motors
+            speed = self.mixer.run(rudder)
+            self.set_speed(speed)
+            # print(speed)
         pass
 
     def hover_patch(self):
@@ -74,10 +83,22 @@ class Pilot:
         vertex = self.planet.add_vertex(self.position)
         # save vertex for later use
         self.current_vertex = vertex
-        self.lm.run_to_rel_pos(position_sp=100, speed_sp=180, stop_action="brake")
-        self.rm.run_to_rel_pos(position_sp=100, speed_sp=180, stop_action="brake")
-        time.sleep(1)
+        self.mode = PilotModes.CHECK_ISC
+
         #  TODO: überdrehen kompensieren
+
+    def turn_motor(self, motor, degrees):
+        self.stop_motors()
+        self.rm.position = 0
+        # turn by degrees
+        p_sp = 5.7361 * degrees
+        if motor is 'lm':
+            self.lm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
+        if motor is 'rm':
+            self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
+
+        print('Turned ' + str(degrees) + ' degrees.')
+        return p_sp
 
     def turn(self, degrees):
         self.stop_motors()
@@ -85,12 +106,28 @@ class Pilot:
         p_sp = 2.88 * degrees
         self.lm.run_to_rel_pos(position_sp=-p_sp, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
-        # print('Turned ' + str(degrees) + ' degrees.')
+        print('Turned ' + str(degrees) + ' degrees.')
         pass
 
     def check_isc(self):
         #  TODO: Intersection checken (turn(deg))
-        time.sleep(5)
+        self.stop_motors()
+        time.sleep(0.5)
+        self.turn(-90)
+        time.sleep(3)
+        p_sp = self.turn_motor('rm', 360)
+        while self.rm.position < p_sp - 10:
+            gs = self.cs.get_greyscale()
+            if gs < 100:
+                print(gs)
+                self.events.set('NEW_PATH', self.rm.position)
+                time.sleep(0.75)
+        self.turn(90)
+        time.sleep(3)
+        self.lm.run_to_rel_pos(position_sp=100, speed_sp=180, stop_action="brake")
+        self.rm.run_to_rel_pos(position_sp=100, speed_sp=180, stop_action="brake")
+        time.sleep(1)
+        self.mode = PilotModes.FOLLOW_LINE
         return self
 
     # ---------
@@ -103,19 +140,23 @@ class Pilot:
 
     def set_color(self, value):
         self.color = value
-        rbd = value[0] - value[2]
+        self.rbd = value[0] - value[2]
         # gs = (value[0] + value[1] + value[2]) / 3
-        # print('RBD: ' + str(rbd) + '  GS: ' + str(gs))
-        if 90 <= rbd:       # red patch
-            self.mode = PilotModes.HOVER_PATH
+        # print('RBD: ' + str(self.rbd) + '  GS: ' + str(gs))
+        if 90 <= self.rbd:       # red patch
+            self.mode = PilotModes.CHECK_ISC
             print('red')
-        elif rbd <= -65:    # blue patch
-            self.mode = PilotModes.HOVER_PATH
+        elif self.rbd <= -65:    # blue patch
+            self.mode = PilotModes.CHECK_ISC
             print('blue')
         pass
 
     def set_mode(self, mode):
         self.mode = mode
+        pass
+
+    def set_touch(self, value):
+        self.touch = value
         pass
 
     def set_speed(self, speed: Tuple[int, int]):

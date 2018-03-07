@@ -1,20 +1,20 @@
-from .pilot.ColorSensor import ColorSensor
-from .pilot.Pilot import Pilot
+from pilot.ColorSensor import ColorSensor
+from pilot.TouchSensor import TouchSensor
+from pilot.Pilot import Pilot
 import ev3dev.ev3 as ev3
 
 # init ev3
-ts1 = ev3.TouchSensor('in2')
-ts2 = ev3.TouchSensor('in3')
 lm = ev3.LargeMotor('outA')
 rm = ev3.LargeMotor('outD')
 # init classes
 cs = ColorSensor()
-pilot = Pilot(lm, rm)
+ts = TouchSensor()
+pilot = Pilot(lm, rm, cs)
 
 
 def run():
     # this is the main loop
-    while not ts1.value() and not ts2.value():
+    while not ts.read_in():
         # read from sensors TODO: write TouchSensor wrapper class
         # sensor classes emit events with fresh input
         # classes that depend on should register to those events

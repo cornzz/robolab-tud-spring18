@@ -1,3 +1,4 @@
+from events.EventRegistry import EventRegistry
 from .Direction import Direction
 from .Edge import Edge
 from .Graph import Graph
@@ -10,7 +11,12 @@ class Planet(Graph):
     def __init__(self, vertexes, edges):
         super().__init__(vertexes, edges)
         self.paths = []
+        EventRegistry.instance().register_event_handler(self.new_path)
         pass
+
+    def new_path(self, value):
+        print(value)
+        return self
 
     def combine_paths(self, start: Path, end: Path, length: float):
         edge = Edge(self.edges.__len__(), start.source, end.source, start.direction, end.direction, length)

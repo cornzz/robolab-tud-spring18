@@ -1,6 +1,6 @@
-from src.pilot.ColorSensor import ColorSensor
-from src.pilot.MotorController import MotorController
-from src.pilot.MotorMixer import MotorMixer
+from pilot.ColorSensor import ColorSensor
+from pilot.MotorController import MotorController
+from pilot.MotorMixer import MotorMixer
 import ev3dev.ev3 as ev3
 import time
 

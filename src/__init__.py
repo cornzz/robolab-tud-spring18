@@ -1,1 +1,1 @@
-from . import pilot, pid_controller, planet, events
+from . import pilot, pid_controller, planet, events, main
