@@ -1,1 +1,1 @@
-from . import EventList, EventRegistry, Event, EventHandler
+from . import EventList, EventRegistry, Event, EventHandler, EventNames

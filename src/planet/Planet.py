@@ -1,16 +1,9 @@
-from . import Graph, Edge, Path
-from src.planet import Vertex
-from enum import unique, IntEnum
+from .Direction import Direction
+from .Edge import Edge
+from .Graph import Graph
+from .Path import Path
+from .Vertex import Vertex
 from typing import Tuple
-
-
-@unique
-class Direction(IntEnum):
-    """ Directions in degrees """
-    NORTH = 0
-    EAST = 90
-    SOUTH = 180
-    WEST = 270
 
 
 class Planet(Graph):
@@ -20,7 +13,7 @@ class Planet(Graph):
         pass
 
     def combine_paths(self, start: Path, end: Path, length: float):
-        edge = Edge.Edge(self.edges.__len__(), start.source, end.source, start.direction, end.direction, length)
+        edge = Edge(self.edges.__len__(), start.source, end.source, start.direction, end.direction, length)
         if edge not in self.edges:
             self.edges.append(edge)
             return edge
@@ -28,21 +21,21 @@ class Planet(Graph):
             return None
 
     def add_vertex(self, position: Tuple[int, int]):
-        vertex = Vertex.Vertex(self.vertexes.__len__(), position[0], position[1])
+        vertex = Vertex(self.vertexes.__len__(), position[0], position[1])
         if vertex not in self.vertexes:
             self.vertexes.append(vertex)
             return vertex
         else:
             return None
 
-    def add_path(self, position: Vertex.Vertex, direction):
-        path = Path.Path(self.paths.__len__(), position, direction)
+    def add_path(self, position: Vertex, direction: Direction):
+        path = Path(self.paths.__len__(), position, direction)
         if path not in self.edges:
             self.paths.append(path)
             return path
         else:
             return None
 
-    def get_shortest_path(self, start: Vertex.Vertex, destination: Vertex.Vertex):
+    def get_shortest_path(self, start: Vertex, end: Vertex):
         # calculate shortest path
         pass

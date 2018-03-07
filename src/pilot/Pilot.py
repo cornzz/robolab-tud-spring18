@@ -1,7 +1,8 @@
 from src.events.EventNames import EventNames
 from src.events.EventRegistry import EventRegistry
-from src.pilot.MotorController import MotorController
-from src.pilot.MotorMixer import MotorMixer
+from .MotorController import MotorController
+from .MotorMixer import MotorMixer
+from .PilotModes import PilotModes
 from src.planet import Planet
 from ev3dev import ev3
 from typing import Tuple
@@ -22,30 +23,27 @@ class Pilot:
     # this is the main driving class
     # simple or complex maneuvers (follow line, turn, stop, ...) are defined as methods
     # PILOT_MODE decides which maneuver is called in the main loop
-    FOLLOW_LINE = 0
-    HOVER_PATH = 1
-    CHECK_ISC = 2
 
-    def __init__(self, lm, rm, registry: EventRegistry):
+    def __init__(self, lm, rm):
         self.current_vertex = None
         self.position = (0, 0)
         self.planet = Planet.Planet([], [])
         self.lm = lm
         self.rm = rm
         self.color = None
-        self.mode = self.FOLLOW_LINE
+        self.mode = PilotModes.FOLLOW_LINE
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
-        registry.register_event_handler(EventNames.PILOT_MODE, self.set_mode)
-        registry.register_event_handler(EventNames.COLORS, self.set_color)
+        EventRegistry.instance().register_event_handler(EventNames.PILOT_MODE, self.set_mode)
+        EventRegistry.instance().register_event_handler(EventNames.COLORS, self.set_color)
         pass
 
     def run(self):
-        if self.mode is self.FOLLOW_LINE:
+        if self.mode is PilotModes.FOLLOW_LINE:
             self.follow_line()
-        elif self.mode is self.HOVER_PATH:
+        elif self.mode is PilotModes.HOVER_PATH:
             self.hover_patch()
-        elif self.mode is self.CHECK_ISC:
+        elif self.mode is PilotModes.CHECK_ISC:
             self.check_isc()
         pass
 
@@ -106,13 +104,13 @@ class Pilot:
     def set_color(self, value):
         self.color = value
         rbd = value[0] - value[2]
-        # gs = (colors[0] + colors[1] + colors[2]) / 3
+        # gs = (value[0] + value[1] + value[2]) / 3
         # print('RBD: ' + str(rbd) + '  GS: ' + str(gs))
         if 90 <= rbd:       # red patch
-            self.mode = self.HOVER_PATH
+            self.mode = PilotModes.HOVER_PATH
             print('red')
         elif rbd <= -65:    # blue patch
-            self.mode = self.HOVER_PATH
+            self.mode = PilotModes.HOVER_PATH
             print('blue')
         pass
 

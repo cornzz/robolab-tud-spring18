@@ -1,9 +1,9 @@
 from .Event import Event
+from .EventRegistry import EventRegistry
 
 
 class EventList:
-    def __init__(self, registry):
-        self.registry = registry
+    def __init__(self):
         self.events = []
 
     def add(self, name):
@@ -19,4 +19,4 @@ class EventList:
             if event.name == name:
                 if event.value != value:
                     event.value = value
-                    self.registry.notify_all_handlers(event)
+                    EventRegistry.instance().notify_all_handlers(event)

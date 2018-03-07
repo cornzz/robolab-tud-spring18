@@ -1,10 +1,10 @@
+from src.events.EventNames import EventNames
 from src.events.EventList import EventList
 import ev3dev.ev3 as ev3
 import colorsys
 import sys
 
 # console color constants
-from src.events.EventNames import EventNames
 
 RED = "\033[1;31m"
 BLUE = "\033[1;34m"
@@ -14,10 +14,10 @@ WHITE = "\033[;1m"
 
 
 class ColorSensor:
-    def __init__(self, registry):
+    def __init__(self):
         self.cs = ev3.ColorSensor('in1')
         self.cs.mode = 'RGB-RAW'
-        self.events = EventList(registry)
+        self.events = EventList()
         self.events.add(EventNames.COLORS)
 
     def read_in(self):

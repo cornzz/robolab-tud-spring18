@@ -1,4 +1,3 @@
-from src.events.EventRegistry import EventRegistry
 from src.pilot.ColorSensor import ColorSensor
 from src.pilot.MotorController import MotorController
 from src.pilot.MotorMixer import MotorMixer
@@ -20,13 +19,11 @@ speed_min = -100
 base_speed = 30
 
 # init
+cs = ColorSensor()
 ts1 = ev3.TouchSensor('in2')
 ts2 = ev3.TouchSensor('in3')
 lm = ev3.LargeMotor('outA')
 rm = ev3.LargeMotor('outD')
-
-registry = EventRegistry()
-cs = ColorSensor(registry)
 
 
 def run():

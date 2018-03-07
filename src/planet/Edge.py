@@ -1,8 +1,17 @@
+from .Direction import Direction
+from .Vertex import Vertex
+
+
 class Edge:
-    def __init__(self, _id, source, destination, start_direction, end_direction, weight):
+    def __init__(self, _id: int,
+                 start: Vertex,
+                 end: Vertex,
+                 start_direction: Direction,
+                 end_direction: Direction,
+                 weight: float):
         self.id = _id
-        self.source = source
-        self.destination = destination
+        self.start = start
+        self.end = end
         self.start_direction = start_direction
         self.end_direction = end_direction
         self.weight = weight
@@ -13,4 +22,4 @@ class Edge:
         pass
 
     def tostring(self):
-        return self.source.tostring() + ' ' + self.destination.tostring()
+        return self.start.tostring() + ' ' + self.end.tostring()

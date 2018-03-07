@@ -1,17 +1,18 @@
+from src.events.EventRegistry import EventRegistry
+from src.events.EventList import EventList
 import unittest
-from src.events import EventRegistry, EventList
 
 
 class Emitter:
-    def __init__(self, registry):
-        self.list = EventList.EventList(registry)
+    def __init__(self):
+        self.list = EventList()
         self.list.add('message')
 
 
 class Receiver:
-    def __init__(self, registry):
+    def __init__(self):
         self.message = None
-        registry.register_event_handler('message', self.set_message)
+        EventRegistry.instance().register_event_handler('message', self.set_message)
 
     def set_message(self, value):
         self.message = value
@@ -20,9 +21,8 @@ class Receiver:
 
 class EventsTestCase(unittest.TestCase):
     def setUp(self):
-        self.registry = EventRegistry.EventRegistry()
-        self.emitter = Emitter(self.registry)
-        self.receiver = Receiver(self.registry)
+        self.emitter = Emitter()
+        self.receiver = Receiver()
         pass
 
     def test_message_to_receiver(self):
@@ -33,6 +33,7 @@ class EventsTestCase(unittest.TestCase):
         self.emitter.list.set('message', message)
         # did message receive?
         self.assertEqual(self.receiver.message, message)
+        print(self.receiver.message)
         pass
 
 

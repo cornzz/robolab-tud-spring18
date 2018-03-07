@@ -1,6 +1,8 @@
 from src.events.EventHandler import EventHandler
+from src.events.Singleton import Singleton
 
 
+@Singleton
 class EventRegistry:
     def __init__(self):
         self.handlers = []
