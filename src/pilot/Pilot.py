@@ -1,11 +1,13 @@
-from events.EventNames import EventNames
-from events.EventRegistry import EventRegistry
-from events.EventList import EventList
 from .ColorSensor import ColorSensor
 from .MotorController import MotorController
 from .MotorMixer import MotorMixer
 from .PilotModes import PilotModes
-from planet import Planet
+from .Odometry import Odometry
+from events.EventNames import EventNames
+from events.EventRegistry import EventRegistry
+from events.EventList import EventList
+from planet.Direction import Direction
+from planet.Planet import Planet
 from ev3dev import ev3
 from typing import Tuple
 import time
@@ -27,9 +29,8 @@ class Pilot:
     # PILOT_MODE decides which maneuver is called in the main loop
 
     def __init__(self, lm, rm, cs: ColorSensor):
-        self.current_vertex = None
-        self.position = (0, 0)
-        self.planet = Planet.Planet([], [])
+        self.planet = Planet([], [])
+        self.odometry = Odometry()
         self.lm = lm
         self.rm = rm
         self.cs = cs
@@ -49,8 +50,6 @@ class Pilot:
     def run(self):
         if self.mode is PilotModes.FOLLOW_LINE:
             self.follow_line()
-        elif self.mode is PilotModes.HOVER_PATCH:
-            self.hover_patch()
         elif self.mode is PilotModes.CHECK_ISC:
             self.check_isc()
         pass
@@ -73,18 +72,6 @@ class Pilot:
             self.set_speed(speed)
             # print(speed)
         pass
-
-    def hover_patch(self):
-        self.stop_motors()
-        ev3.Sound.beep()
-        # save calculated position as vertex if it not already exists
-        self.set_position()
-        vertex = self.planet.add_vertex(self.position)
-        # save vertex for later use
-        self.current_vertex = vertex
-        self.mode = PilotModes.CHECK_ISC
-
-        #  TODO: überdrehen kompensieren
 
     def turn_motor(self, motor, degrees):
         self.stop_motors()
@@ -109,6 +96,12 @@ class Pilot:
         pass
 
     def check_isc(self):
+        self.stop_motors()
+        # save calculated position as vertex if it not already exists
+        self.set_position()
+        self.set_direction()
+        self.current_vertex = self.planet.add_vertex(self.position)
+
         time.sleep(0.2)
         self.turn(-90)
         time.sleep(1.2)
@@ -116,7 +109,9 @@ class Pilot:
         while self.rm.position < p_sp - 10:
             gs = self.cs.get_greyscale()
             if gs < 100:
+                # save vertex for later use
                 print(gs)
+                self.planet.add_path(self.current_vertex, )
                 self.events.set('NEW_PATH', self.rm.position)
                 time.sleep(0.75)
         self.turn(90)
@@ -164,6 +159,11 @@ class Pilot:
     def set_speed(self, speed: Tuple[int, int]):
         self.lm.duty_cycle_sp = speed[0]
         self.rm.duty_cycle_sp = speed[1]
+        pass
+
+    def set_direction(self):
+        # TODO: odometry get direction
+        self.direction = Direction.NORTH
         pass
 
     # ---------

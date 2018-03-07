@@ -15,7 +15,7 @@ pilot = Pilot(lm, rm, cs)
 def run():
     # this is the main loop
     while not ts.read_in():
-        # read from sensors TODO: write TouchSensor wrapper class
+        # read from sensors
         # sensor classes emit events with fresh input
         # classes that depend on should register to those events
         cs.read_in()
