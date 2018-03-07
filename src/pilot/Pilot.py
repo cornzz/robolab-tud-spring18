@@ -77,7 +77,6 @@ class Pilot:
     def hover_patch(self):
         self.stop_motors()
         ev3.Sound.beep()
-        time.sleep(1)
         # save calculated position as vertex if it not already exists
         self.set_position()
         vertex = self.planet.add_vertex(self.position)
@@ -97,7 +96,7 @@ class Pilot:
         if motor is 'rm':
             self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
 
-        print('Turned ' + str(degrees) + ' degrees.')
+        print('Turning: ' + str(degrees) + ' degrees.')
         return p_sp
 
     def turn(self, degrees):
@@ -106,15 +105,13 @@ class Pilot:
         p_sp = 2.88 * degrees
         self.lm.run_to_rel_pos(position_sp=-p_sp, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
-        print('Turned ' + str(degrees) + ' degrees.')
+        print('Turning: ' + str(degrees) + ' degrees.')
         pass
 
     def check_isc(self):
-        #  TODO: Intersection checken (turn(deg))
-        self.stop_motors()
-        time.sleep(0.5)
+        time.sleep(0.2)
         self.turn(-90)
-        time.sleep(3)
+        time.sleep(1.2)
         p_sp = self.turn_motor('rm', 360)
         while self.rm.position < p_sp - 10:
             gs = self.cs.get_greyscale()
@@ -123,10 +120,10 @@ class Pilot:
                 self.events.set('NEW_PATH', self.rm.position)
                 time.sleep(0.75)
         self.turn(90)
-        time.sleep(3)
-        self.lm.run_to_rel_pos(position_sp=100, speed_sp=180, stop_action="brake")
-        self.rm.run_to_rel_pos(position_sp=100, speed_sp=180, stop_action="brake")
-        time.sleep(1)
+        time.sleep(1.2)
+        self.lm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
+        time.sleep(1.5)
         self.mode = PilotModes.FOLLOW_LINE
         return self
 
@@ -144,11 +141,16 @@ class Pilot:
         # gs = (value[0] + value[1] + value[2]) / 3
         # print('RBD: ' + str(self.rbd) + '  GS: ' + str(gs))
         if 90 <= self.rbd:       # red patch
+            print('Patch: red')
+            self.stop_motors()
             self.mode = PilotModes.CHECK_ISC
-            print('red')
         elif self.rbd <= -65:    # blue patch
+            print('Patch: blue')
+            self.stop_motors()
+            time.sleep(0.4)
+            self.lm.run_to_rel_pos(position_sp=-35, speed_sp=180, stop_action="hold")
+            time.sleep(0.1)
             self.mode = PilotModes.CHECK_ISC
-            print('blue')
         pass
 
     def set_mode(self, mode):
