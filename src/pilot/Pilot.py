@@ -2,7 +2,6 @@ from .ColorSensor import ColorSensor
 from .MotorController import MotorController
 from .MotorMixer import MotorMixer
 from .PilotModes import PilotModes
-from .Odometry import Odometry
 from events.EventNames import EventNames
 from events.EventRegistry import EventRegistry
 from events.EventList import EventList
@@ -30,7 +29,9 @@ class Pilot:
 
     def __init__(self, lm, rm, cs: ColorSensor):
         self.planet = Planet([], [])
-        self.odometry = Odometry()
+        self.motor_position = (0, 0)
+        self.position = None
+        self.vertex = None
         self.lm = lm
         self.rm = rm
         self.cs = cs
@@ -41,10 +42,11 @@ class Pilot:
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
         self.events = EventList()
-        self.events.add('NEW_PATH')
+        self.events.add(EventNames.NEW_PATH)
         EventRegistry.instance().register_event_handler(EventNames.PILOT_MODE, self.set_mode)
         EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
         EventRegistry.instance().register_event_handler(EventNames.TOUCH, self.set_touch)
+        EventRegistry.instance().register_event_handler(EventNames.POSITION, self.set_position)
         pass
 
     def run(self):
@@ -75,14 +77,12 @@ class Pilot:
 
     def turn_motor(self, motor, degrees):
         self.stop_motors()
-        self.rm.position = 0
         # turn by degrees
         p_sp = 5.7361 * degrees
         if motor is 'lm':
             self.lm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
         if motor is 'rm':
             self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
-
         print('Turning: ' + str(degrees) + ' degrees.')
         return p_sp
 
@@ -97,25 +97,23 @@ class Pilot:
 
     def check_isc(self):
         self.stop_motors()
-        # save calculated position as vertex if it not already exists
-        self.set_position()
-        self.set_direction()
-        self.current_vertex = self.planet.add_vertex(self.position)
-
         time.sleep(0.2)
         self.turn(-90)
         time.sleep(1.2)
+        position = self.rm.position
         p_sp = self.turn_motor('rm', 360)
-        while self.rm.position < p_sp - 10:
+        while self.rm.position - position < p_sp - 10:
+            if self.touch:
+                break
             gs = self.cs.get_greyscale()
             if gs < 100:
-                # save vertex for later use
-                print(gs)
-                self.planet.add_path(self.current_vertex, )
-                self.events.set('NEW_PATH', self.rm.position)
+                # print(gs)
+                self.events.set(EventNames.NEW_PATH, self.position)
                 time.sleep(0.75)
         self.turn(90)
         time.sleep(1.2)
+        self.lm.position = self.motor_position[0]
+        self.rm.position = self.motor_position[1]
         self.lm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
         time.sleep(1.5)
@@ -125,10 +123,10 @@ class Pilot:
     # ---------
     # SETTER
     # ---------
-    def set_position(self):
-        # TODO: implement odometry
-        self.position = (0, 0)
-        return 0, 0
+    def set_position(self, value):
+        print(value)
+        self.position = value
+        return self.position
 
     def set_color(self, value):
         self.color = value
@@ -138,10 +136,12 @@ class Pilot:
         if 90 <= self.rbd:       # red patch
             print('Patch: red')
             self.stop_motors()
+            self.motor_position = (self.lm.position, self.rm.position)
             self.mode = PilotModes.CHECK_ISC
         elif self.rbd <= -65:    # blue patch
             print('Patch: blue')
             self.stop_motors()
+            self.motor_position = (self.lm.position, self.rm.position)
             time.sleep(0.4)
             self.lm.run_to_rel_pos(position_sp=-35, speed_sp=180, stop_action="hold")
             time.sleep(0.1)
@@ -159,11 +159,6 @@ class Pilot:
     def set_speed(self, speed: Tuple[int, int]):
         self.lm.duty_cycle_sp = speed[0]
         self.rm.duty_cycle_sp = speed[1]
-        pass
-
-    def set_direction(self):
-        # TODO: odometry get direction
-        self.direction = Direction.NORTH
         pass
 
     # ---------
