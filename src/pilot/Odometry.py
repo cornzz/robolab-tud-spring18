@@ -52,10 +52,10 @@ class Odometry:
         self.y = self.y + dy
         x = round(self.x / 50)
         y = round(self.y / 50)
-        self.heading = (self.heading + rotation) % (2 * math.pi)
-        heading = Direction.format(Direction.to_deg(self.heading))
-        self.events.set(EventNames.POSITION, (x, y, heading))
-        return x, y, heading
+        self.heading = self.heading + rotation
+        # heading = Direction.format(Direction.to_deg(self.heading))
+        self.events.set(EventNames.POSITION, (x, y, self.heading))
+        return x, y, self.heading
 
     # ---------
     # SETTER
