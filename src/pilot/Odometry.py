@@ -46,14 +46,12 @@ class Odometry:
         displacement = (lec + rec) * ECF / 2
         rotation = (lec - rec) * ECF / TRACK
         # print(rotation)
-        dx = displacement * math.cos(self.heading + rotation / 2)
-        dy = displacement * math.sin(self.heading + rotation / 2)
-        self.x = self.x + dx
-        self.y = self.y + dy
+        self.x = self.x + displacement * math.sin(self.heading + rotation / 2)
+        self.y = self.y + displacement * math.cos(self.heading + rotation / 2)
         x = round(self.x / 50)
         y = round(self.y / 50)
         self.heading = self.heading + rotation
-        heading = Direction.to_deg(self.heading)
+        heading = Direction.format(Direction.to_deg(self.heading))
         self.events.set(EventNames.POSITION, (x, y, heading))
         return x, y, self.heading
 

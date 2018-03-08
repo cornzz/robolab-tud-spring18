@@ -25,7 +25,15 @@ class Direction(IntEnum):
 
     @staticmethod
     def format(value):
-        return map_to_range(value, 0, 359.9999, 0, 3) * 90
+        if 315 <= value <= 45:
+            value = 0
+        if 45 <= value <= 135:
+            value = 90
+        if 135 <= value <= 225:
+            value = 180
+        if 225 <= value <= 315:
+            value = 270
+        return value
 
     @staticmethod
     def to_deg(value):
