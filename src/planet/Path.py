@@ -8,3 +8,6 @@ class Path:
         self.source = source
         self.direction = direction
         pass
+
+    def __str__(self):
+        return self.source.x + ',' + self.source.y + ',' + Direction.str(self.direction)

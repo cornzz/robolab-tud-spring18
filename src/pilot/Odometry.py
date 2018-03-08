@@ -1,7 +1,12 @@
 from typing import Tuple
+from planet.Direction import Direction
 from events.EventList import EventList
 from events.EventNames import EventNames
 import math
+
+# constants
+TRACK = 15.8
+WHEEL_DIAMETER = 5.6
 
 
 class Odometry:
@@ -16,19 +21,35 @@ class Odometry:
         self.events.add(EventNames.POSITION)
         pass
 
-    def calc_pos(self):
+    def calc_pos2(self):
         lec = self.curr_pos[0] - self.prev_pos[0]
         rec = self.curr_pos[1] - self.prev_pos[1]
-        ecf = math.pi * 5.6 / 360
+        rl = TRACK / (rec - lec) * lec
+        rm = rl + TRACK / 2
+        alpha = rec / (TRACK + rl)
+        rotation = alpha / 2
+        m = 2 * rm * math.sin(rotation)
+        self.heading = self.heading + rotation
+        self.x = self.x + m * math.cos(rotation)
+        self.y = self.y + m * math.sin(rotation)
+        x = round(self.x)
+        y = round(self.y)
+        self.events.set(EventNames.POSITION, (x, y, self.heading))
+        return x, y, self.heading
+
+    def calc_pos1(self):
+        lec = self.curr_pos[0] - self.prev_pos[0]
+        rec = self.curr_pos[1] - self.prev_pos[1]
+        ecf = math.pi * WHEEL_DIAMETER / 360
         displacement = (lec + rec) * ecf / 2
-        rotation = (lec - rec) * ecf / 15.8
+        rotation = (lec - rec) * ecf / TRACK
 
         self.x = self.x + displacement * math.cos(self.heading + rotation / 2)
         self.y = self.y + displacement * math.sin(self.heading + rotation / 2)
         self.heading = self.heading + rotation
         x = round(self.x)
         y = round(self.y)
-        heading = (self.heading / math.pi * 180) % 360
+        heading = Direction.to_deg(self.heading)
         self.events.set(EventNames.POSITION, (x, y, heading))
         return x, y, heading
 

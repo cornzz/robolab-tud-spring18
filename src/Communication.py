@@ -8,6 +8,7 @@ PORT = 8883
 
 class Communication:
     def __init__(self, planet):
+        self.is_connected = False
         self.client = mqtt.Client(client_id='050', clean_session=False, protocol=mqtt.MQTTv31)
         self.client.on_message = self.receive
         self.client.username_pw_set('050', password='gruppe50')
@@ -32,13 +33,16 @@ class Communication:
         pass
 
     def start(self):
-        self.client.connect(URL, port=PORT)
+        if not self.is_connected:
+            self.client.connect(URL, port=PORT)
+            self.is_connected = True
         self.client.subscribe(CHANNEL, qos=1)
         self.client.loop_start()
         pass
 
     def stop(self):
         self.client.loop_stop()
+        self.is_connected = False
         pass
 
     # ---------------
