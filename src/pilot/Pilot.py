@@ -99,6 +99,7 @@ class Pilot:
         pass
 
     def check_isc(self):
+        print(self.position)
         self.stop_motors()
         time.sleep(0.2)
         self.turn(-90)
@@ -127,9 +128,8 @@ class Pilot:
     # SETTER
     # ---------
     def set_position(self, value):
-        print(value)
+        # print(value)
         self.position = value
-        return self.position
 
     def set_color(self, value):
         self.color = value

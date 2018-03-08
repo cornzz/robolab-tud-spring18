@@ -40,12 +40,12 @@ class Odometry:
         return self.x, self.y, self.heading
 
     def calc_pos1(self, motor_position: Tuple[int, int]):
-        print(motor_position)
+        # print(motor_position)
         lec = motor_position[0]
         rec = motor_position[1]
         displacement = (lec + rec) * ECF / 2
         rotation = (lec - rec) * ECF / TRACK
-        print(rotation)
+        # print(rotation)
         dx = displacement * math.cos(self.heading + rotation / 2)
         dy = displacement * math.sin(self.heading + rotation / 2)
         self.x = self.x + dx
@@ -53,8 +53,8 @@ class Odometry:
         x = round(self.x / 50)
         y = round(self.y / 50)
         self.heading = self.heading + rotation
-        # heading = Direction.format(Direction.to_deg(self.heading))
-        self.events.set(EventNames.POSITION, (x, y, self.heading))
+        heading = Direction.to_deg(self.heading)
+        self.events.set(EventNames.POSITION, (x, y, heading))
         return x, y, self.heading
 
     # ---------
