@@ -20,6 +20,7 @@ class AbstractController(ABC):
         # print('ctrl: ', result)
         self.previous_error = error
         self.i_error = max(-self.i_max, min(self.i_max, self.i_error + error))
+        self.i_error *= 0.8
         return result
 
     @abstractmethod

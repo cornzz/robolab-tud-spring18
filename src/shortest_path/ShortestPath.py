@@ -1,4 +1,4 @@
-from shortest_path import PathingAlgorithm
+from . import PathingAlgorithm
 
 
 class ShortestPath(PathingAlgorithm.PathingAlgorithm):
@@ -36,15 +36,21 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
     pass
 
     def get_path(self, target):
-        path = []
+        vertexes = []
         step = target
-        # check if a path exists
+        # check if a vertexes exists
         if self.predecessors.get(step.id) is None:
             return None
-        path.append(step)
+        vertexes.append(step)
         while self.predecessors.get(step.id):
             step = self.predecessors.get(step.id)
-            path.append(step)
-        path.pop()
-        path.reverse()
+            vertexes.append(step)
+        vertexes.pop()
+        vertexes.reverse()
+        path = []
+        for i in range(vertexes.__len__() - 2):
+            if i >= 0:
+                for e in self.edges:
+                    if vertexes[i].equals(e.start) and vertexes[i + 1].equals(e.end):
+                        path.append(e)
         return path

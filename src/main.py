@@ -8,16 +8,16 @@ import ev3dev.ev3 as ev3
 # init ev3
 lm = ev3.LargeMotor('outA')
 rm = ev3.LargeMotor('outD')
-lm.position = 0
-rm.position = 0
+cs = ColorSensor()
+ts = TouchSensor()
+pilot = Pilot(lm, rm, cs)
 
 
 def run():
     # init classes
-    cs = ColorSensor()
-    ts = TouchSensor()
     odometry = Odometry()
-    pilot = Pilot(lm, rm, cs)
+    lm.position = 0
+    rm.position = 0
     i = 0
     # this is the main loop
     while not ts.read_in():

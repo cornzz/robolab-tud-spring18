@@ -8,3 +8,4 @@ class EventNames(Enum):
     TOUCH = 'TOUCH'
     POSITION = 'POSITION'
     NEW_PATH = 'NEW_PATH'
+    CURR_VERTEX = 'CURR_VERTEX'

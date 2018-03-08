@@ -68,10 +68,13 @@ class Communication:
     # MESSAGES - IN
     # ---------------
     def receive_edge(self, start, end, status, weight):
+
         pass
 
     def receive_target(self, target):
+
         pass
 
     def receive_planet(self, planet, point):
+
         pass
