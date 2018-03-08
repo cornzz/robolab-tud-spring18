@@ -1,1 +1,1 @@
-from . import ColorSensor, MotorController, MotorMixer, Pilot, learn
+from . import ColorSensor, MotorController, MotorMixer, Pilot, Odometry, learn

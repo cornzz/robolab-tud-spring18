@@ -2,6 +2,7 @@ from .ColorSensor import ColorSensor
 from .MotorController import MotorController
 from .MotorMixer import MotorMixer
 from .PilotModes import PilotModes
+from .Odometry import Odometry
 from events.EventNames import EventNames
 from events.EventRegistry import EventRegistry
 from events.EventList import EventList
@@ -28,19 +29,21 @@ class Pilot:
     # PILOT_MODE decides which maneuver is called in the main loop
 
     def __init__(self, lm, rm, cs: ColorSensor):
-        self.planet = Planet([], [])
-        self.motor_position = (0, 0)
+        #  values
+        self.mode = PilotModes.FOLLOW_LINE
         self.position = None
-        self.vertex = None
-        self.lm = lm
-        self.rm = rm
-        self.cs = cs
         self.color = None
         self.rbd = None
         self.touch = False
-        self.mode = PilotModes.FOLLOW_LINE
+        # motors
+        self.lm = lm
+        self.rm = rm
+        # controllers, classes
+        self.cs = cs
+        self.planet = Planet([], [])
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
+        # IPC
         self.events = EventList()
         self.events.add(EventNames.NEW_PATH)
         EventRegistry.instance().register_event_handler(EventNames.PILOT_MODE, self.set_mode)
@@ -50,7 +53,7 @@ class Pilot:
         pass
 
     def run(self):
-        if self.mode is PilotModes.FOLLOW_LINE:
+        if self.mode is PilotModes.FOLLOW_LINE or self.mode is PilotModes.FOLLOW_LINE_ODO:
             self.follow_line()
         elif self.mode is PilotModes.CHECK_ISC:
             self.check_isc()
@@ -102,7 +105,7 @@ class Pilot:
         time.sleep(1.2)
         position = self.rm.position
         p_sp = self.turn_motor('rm', 360)
-        while self.rm.position - position < p_sp - 10:
+        while self.rm.position - position < p_sp - 5:
             if self.touch:
                 break
             gs = self.cs.get_greyscale()
@@ -112,8 +115,8 @@ class Pilot:
                 time.sleep(0.75)
         self.turn(90)
         time.sleep(1.2)
-        self.lm.position = self.motor_position[0]
-        self.rm.position = self.motor_position[1]
+        self.lm.position = 0
+        self.rm.position = 0
         self.lm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
         time.sleep(1.5)
@@ -136,12 +139,10 @@ class Pilot:
         if 90 <= self.rbd:       # red patch
             print('Patch: red')
             self.stop_motors()
-            self.motor_position = (self.lm.position, self.rm.position)
             self.mode = PilotModes.CHECK_ISC
         elif self.rbd <= -65:    # blue patch
             print('Patch: blue')
             self.stop_motors()
-            self.motor_position = (self.lm.position, self.rm.position)
             time.sleep(0.4)
             self.lm.run_to_rel_pos(position_sp=-35, speed_sp=180, stop_action="hold")
             time.sleep(0.1)

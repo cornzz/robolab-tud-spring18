@@ -19,15 +19,13 @@ pilot = Pilot(lm, rm, cs)
 
 def run():
     i = 0
-    odometry.set_position((0, 0))
     # this is the main loop
     while not ts.read_in():
         # read from sensors
         # sensor classes emit events with fresh input
         # classes that depend on should register to those events
         if i == 4 and pilot.mode == PilotModes.FOLLOW_LINE:
-            odometry.set_position((lm.position, rm.position))
-            odometry.read_in()
+            odometry.read_in((lm.position, rm.position))
             i = 0
         cs.read_in()
         # switch PILOT_MODE and run corresponding maneuver

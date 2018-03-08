@@ -65,5 +65,3 @@ class ColorSensor:
     #     return rgb, hsv
 
 
-def map_to_range(x, in_min, in_max, out_min, out_max):
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
