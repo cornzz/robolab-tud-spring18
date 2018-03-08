@@ -52,7 +52,7 @@ class Odometry:
         y = round(self.y / 50)
         self.heading = self.heading + rotation
         heading = Direction.format(Direction.to_deg(self.heading))
-        self.events.set(EventNames.POSITION, (x, y, heading))
+        self.events.set(EventNames.POSITION, (x, y, heading, Direction.str(heading, True)))
         return x, y, self.heading
 
     # ---------

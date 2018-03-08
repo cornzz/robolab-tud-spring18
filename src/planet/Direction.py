@@ -11,14 +11,22 @@ class Direction(IntEnum):
     WEST = 270
 
     @staticmethod
-    def str(value):
+    def str(value, flag):
         if value == Direction.NORTH:
+            if flag:
+                return 'NORTH'
             return 'N'
         elif value == Direction.EAST:
+            if flag:
+                return 'EAST'
             return 'E'
         elif value == Direction.SOUTH:
+            if flag:
+                return 'SOUTH'
             return 'S'
-        elif value == Direction.WEst:
+        elif value == Direction.WEST:
+            if flag:
+                return 'WEST'
             return 'W'
         else:
             raise ParseDirectionException(value)
