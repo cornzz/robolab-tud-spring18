@@ -32,7 +32,8 @@ def run():
         cs.read_in()
         # switch PILOT_MODE and run corresponding maneuver
         pilot.run()
-        i += 1
+        # i += 1
+    # pilot.test(40, -90)
     pilot.stop_motors()
     pass
 

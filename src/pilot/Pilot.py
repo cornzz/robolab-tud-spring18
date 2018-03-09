@@ -135,7 +135,7 @@ class Pilot:
                 else:
                     continue
                 direction = direction % 360
-                print('path detected: ' + str(direction))
+                # print('path detected: ' + str(direction))
                 self.events.set(EventNames.NEW_PATH, direction)
                 time.sleep(0.5)
         self.events.set(EventNames.NEW_PATH, (self.position[2] + Direction.SOUTH) % 360)
@@ -152,23 +152,50 @@ class Pilot:
         print('choose_path()')
         self.stop_motors()
         path = self.planet.get_next_path()
-
-        self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-        self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-        time.sleep(1)
-
         turn_direction = self.position[2] - path.direction
-        if turn_direction == -270:
-            turn_direction = 90
         if turn_direction == 270:
             turn_direction = -90
-        self.turn(turn_direction)
+        if turn_direction == -270:
+            turn_direction = 90
 
-        self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
-        self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+        if turn_direction == -90:  # East (relative)
+            self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            time.sleep(1)
+            self.turn(turn_direction)
+        elif turn_direction == 0:  # North (relative)
+            self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
+            time.sleep(0.1)
+        elif turn_direction == 90:  # West (relative)
+            turn_direction = 90
+            self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
+            time.sleep(1)
+            self.turn(turn_direction)
+            self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+        elif turn_direction == 180:  # South (relative)
+            self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            self.turn(90)
+            self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            self.turn(90)
+            self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+            self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+
         time.sleep(2)
 
         self.mode = PilotModes.FOLLOW_LINE
+        pass
+
+    def test(self, value, value2):
+        print('test()')
+        self.lm.run_to_rel_pos(position_sp=value, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=value, speed_sp=200, stop_action="hold")
+        time.sleep(0.5)
+        self.turn(value2)
         pass
 
     # ---------
