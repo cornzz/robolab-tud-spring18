@@ -55,12 +55,11 @@ class Planet(Graph):
 
     def get_next_path(self):
         # depth first
-        print('curr_vertex: ', self.curr_vertex)
         if self.curr_vertex:
             for path in self.paths:
                 if self.curr_vertex == path.source:
                     self.curr_path = path
-                    print('curr_path: ', path)
+                    print('next path: ', path)
                     return path
 
     def set_curr_vertex(self, vertex):

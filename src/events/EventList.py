@@ -20,3 +20,8 @@ class EventList:
                 if event.value != value:
                     event.value = value
                     EventRegistry.instance().notify_all_handlers(event)
+
+    def reset(self, name):
+        for event in self.events:
+            if event.name == name:
+                event.value = None

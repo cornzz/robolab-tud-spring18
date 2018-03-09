@@ -106,37 +106,45 @@ class Pilot:
 
     def check_isc(self):
         print('check_isc()')
+        self.stop_motors()
         print(self.position)
         vertex = self.planet.add_vertex((self.position[0], self.position[1]))
         self.events.set(EventNames.CURR_VERTEX, vertex)
-        self.stop_motors()
 
         self.turn(-90)
+        print('Turning: 362 degrees.')
 
-        start_pos = self.rm.position
+        self.rm.position = 0
         target_pos = self.turn_motor('rm', 362)
-        quarter = target_pos / 4
+        eigth = target_pos / 8
         three_quarters = target_pos * 3 / 4
-        direction = self.position[2]
-        while self.rm.position - start_pos < target_pos - 10:
+        while self.rm.position < target_pos - 10:
             # print(self.rm.position)
             gs = self.cs.get_greyscale()
             if gs < 100:
-                
-                if quarter - 150 <= self.rm.position - start_pos <= quarter + 150:
+                direction = self.position[2]
+                if target_pos - 7 * eigth <= self.rm.position <= target_pos - 5 * eigth:
                     direction += Direction.EAST
-                elif three_quarters - 150 <= self.rm.position - start_pos <= three_quarters + 150:
+                    # print('right path detected: ' + str(direction))
+                elif target_pos - 5 * eigth <= self.rm.position <= target_pos - 3 * eigth:
+                    direction += Direction.NORTH
+                    # print('straight path detected: ' + str(direction))
+                elif target_pos - 3 * eigth <= self.rm.position <= target_pos - 1 * eigth:
                     direction += Direction.WEST
+                    # print('left path detected: ' + str(direction))
+                else:
+                    continue
                 direction = direction % 360
+                print('path detected: ' + str(direction))
                 self.events.set(EventNames.NEW_PATH, direction)
                 time.sleep(0.5)
         self.events.set(EventNames.NEW_PATH, (self.position[2] + Direction.SOUTH) % 360)
-        print('Turning: 362 degrees.')
 
         self.turn(90)
 
         self.lm.position = 0
         self.rm.position = 0
+        self.events.reset(EventNames.NEW_PATH)
         self.choose_path()
         pass
 
@@ -149,7 +157,11 @@ class Pilot:
         self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
         time.sleep(1)
 
-        turn_direction = (path.direction + Direction.SOUTH) % 360
+        turn_direction = self.position[2] - path.direction
+        if turn_direction == -270:
+            turn_direction = 90
+        if turn_direction == 270:
+            turn_direction = -90
         self.turn(turn_direction)
 
         self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
