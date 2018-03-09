@@ -8,12 +8,14 @@ class Edge:
                  end: Vertex,
                  start_direction: Direction,
                  end_direction: Direction,
-                 weight: float):
+                 weight: float,
+                 status: str):
         self.id = _id
         self.start = start
         self.end = end
         self.start_direction = start_direction
         self.end_direction = end_direction
+        self.status = status
         self.weight = weight
         pass
 

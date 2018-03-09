@@ -8,6 +8,7 @@ PORT = 8883
 
 class Communication:
     def __init__(self, planet):
+        self.planet = planet
         self.is_connected = False
         self.client = mqtt.Client(client_id='050', clean_session=False, protocol=mqtt.MQTTv31)
         self.client.on_message = self.receive
@@ -68,10 +69,19 @@ class Communication:
     # MESSAGES - IN
     # ---------------
     def receive_edge(self, start, end, status, weight):
+        start = start.split(',')
+        start_direction = start[2]
+        start.pop(2)
+        end = end.split(',')
+        end_direction = end[2]
+        end.pop(2)
+
         pass
 
     def receive_target(self, target):
         pass
 
     def receive_planet(self, planet, point):
+        CHANNEL = planet
+        self.client.subscribe(CHANNEL, qos=1)
         pass
