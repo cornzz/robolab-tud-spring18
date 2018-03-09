@@ -16,7 +16,7 @@ import time
 K_P = 0.62
 K_I = 0.05
 K_D = 0.3
-I_MAX = 40
+I_MAX = 100
 SETPOINT = 330
 SPEED_MAX = 100
 SPEED_MIN = -100
@@ -31,7 +31,9 @@ class Pilot:
     def __init__(self, lm, rm, cs: ColorSensor):
         #  values
         self.mode = PilotModes.FOLLOW_LINE
-        self.position = None
+        self.vertex = None
+        self.path = None
+        self.position = (0, 0, 0)
         self.color = None
         self.rbd = None
         self.touch = False
@@ -43,9 +45,12 @@ class Pilot:
         self.planet = Planet([], [])
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
+
         # IPC
         self.events = EventList()
-        self.events.add(EventNames.NEW_PATH)
+        self.events\
+            .add(EventNames.NEW_PATH)\
+            .add(EventNames.CURR_VERTEX)
         EventRegistry.instance().register_event_handler(EventNames.PILOT_MODE, self.set_mode)
         EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
         EventRegistry.instance().register_event_handler(EventNames.TOUCH, self.set_touch)
@@ -53,10 +58,12 @@ class Pilot:
         pass
 
     def run(self):
-        if self.mode is PilotModes.FOLLOW_LINE or self.mode is PilotModes.FOLLOW_LINE_ODO:
+        if self.mode is PilotModes.FOLLOW_LINE:
             self.follow_line()
         elif self.mode is PilotModes.CHECK_ISC:
             self.check_isc()
+        elif self.mode is PilotModes.CHOOSE_PATH:
+            self.choose_path()
         pass
 
     # ---------
@@ -79,50 +86,78 @@ class Pilot:
         pass
 
     def turn_motor(self, motor, degrees):
-        self.stop_motors()
         # turn by degrees
         p_sp = 5.7361 * degrees
         if motor is 'lm':
             self.lm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
         if motor is 'rm':
             self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
-        print('Turning: ' + str(degrees) + ' degrees.')
         return p_sp
 
     def turn(self, degrees):
-        self.stop_motors()
         # turn by degrees
         p_sp = 2.88 * degrees
         self.lm.run_to_rel_pos(position_sp=-p_sp, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
         print('Turning: ' + str(degrees) + ' degrees.')
+        duration = abs(degrees) / 90 * 1.3
+        time.sleep(duration)
         pass
 
     def check_isc(self):
+        print('check_isc()')
         print(self.position)
+        vertex = self.planet.add_vertex((self.position[0], self.position[1]))
+        self.events.set(EventNames.CURR_VERTEX, vertex)
         self.stop_motors()
-        time.sleep(0.2)
+
         self.turn(-90)
-        time.sleep(1.2)
-        position = self.rm.position
-        p_sp = self.turn_motor('rm', 360)
-        while self.rm.position - position < p_sp - 5:
-            if self.touch:
-                break
+
+        start_pos = self.rm.position
+        target_pos = self.turn_motor('rm', 362)
+        quarter = target_pos / 4
+        three_quarters = target_pos * 3 / 4
+        direction = self.position[2]
+        while self.rm.position - start_pos < target_pos - 10:
+            # print(self.rm.position)
             gs = self.cs.get_greyscale()
             if gs < 100:
-                # print(gs)
-                self.events.set(EventNames.NEW_PATH, self.position)
-                time.sleep(0.75)
+                
+                if quarter - 150 <= self.rm.position - start_pos <= quarter + 150:
+                    direction += Direction.EAST
+                elif three_quarters - 150 <= self.rm.position - start_pos <= three_quarters + 150:
+                    direction += Direction.WEST
+                direction = direction % 360
+                self.events.set(EventNames.NEW_PATH, direction)
+                time.sleep(0.5)
+        self.events.set(EventNames.NEW_PATH, (self.position[2] + Direction.SOUTH) % 360)
+        print('Turning: 362 degrees.')
+
         self.turn(90)
-        time.sleep(1.2)
+
         self.lm.position = 0
         self.rm.position = 0
-        self.lm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
-        self.rm.run_to_rel_pos(position_sp=130, speed_sp=180, stop_action="hold")
-        time.sleep(1.5)
+        self.choose_path()
+        pass
+
+    def choose_path(self):
+        print('choose_path()')
+        self.stop_motors()
+        path = self.planet.get_next_path()
+
+        self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+        time.sleep(1)
+
+        turn_direction = (path.direction + Direction.SOUTH) % 360
+        self.turn(turn_direction)
+
+        self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+        time.sleep(2)
+
         self.mode = PilotModes.FOLLOW_LINE
-        return self
+        pass
 
     # ---------
     # SETTER

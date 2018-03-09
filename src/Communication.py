@@ -75,10 +75,10 @@ class Communication:
         end = end.split(',')
         end_direction = end[2]
         end.pop(2)
-
         pass
 
     def receive_target(self, target):
+
         pass
 
     def receive_planet(self, planet, point):

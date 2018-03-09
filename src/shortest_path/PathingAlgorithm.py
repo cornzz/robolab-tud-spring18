@@ -16,7 +16,7 @@ class PathingAlgorithm:
         i = 0
         while i < self.edges.__len__():
             edge = self.edges[i]
-            if edge.source.equals(node) and edge.destination.equals(target):
+            if edge.start.equals(node) and edge.end.equals(target):
                 return edge.weight
             i += 1
     pass
@@ -26,8 +26,8 @@ class PathingAlgorithm:
         i = 0
         while i < self.edges.__len__():
             edge = self.edges[i]
-            if edge.source.equals(node) and not self.is_settled(edge.destination):
-                neighbors.append(edge.destination)
+            if edge.start.equals(node) and not self.is_settled(edge.end):
+                neighbors.append(edge.end)
             i += 1
         return neighbors
     pass
@@ -45,8 +45,8 @@ class PathingAlgorithm:
             i += 1
         return minimum
 
-    def get_shortest_distance(self, destination):
-        d = self.distance.get(destination.id)
+    def get_shortest_distance(self, end):
+        d = self.distance.get(end.id)
         if d is None:
             return 1000000000
         else:
