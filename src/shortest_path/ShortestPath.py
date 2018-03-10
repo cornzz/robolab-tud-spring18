@@ -1,16 +1,22 @@
 from . import PathingAlgorithm
+from src.events.EventList import EventList
+from src.events.EventNames import EventNames
 
 
 class ShortestPath(PathingAlgorithm.PathingAlgorithm):
-    def __init__(self, graph):
+    def __init__(self, graph, start, target):
         super().__init__(graph)
+        self.start = start
+        self.target = target
         self.unSettledNodes = []
         self.predecessors = {}
-    pass
+        self.events = EventList()
+        self.events.add(EventNames.SHORTEST_PATH)
+        pass
 
-    def execute(self, source):
-        self.distance[source.id] = 0
-        self.unSettledNodes.append(source)
+    def execute(self):
+        self.distance[self.start.position] = 0
+        self.unSettledNodes.append(self.start)
 
         while self.unSettledNodes.__len__() > 0:
             node = self.get_minimum(self.unSettledNodes)
@@ -22,35 +28,44 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
 
     def find_minimal_distances(self, node):
         adjacent_nodes = self.get_neighbors(node)
-        i = 0
-        while i < adjacent_nodes.__len__():
-            target = adjacent_nodes[i]
+        for target in adjacent_nodes:
             if (
                 self.get_shortest_distance(target)
                 > self.get_shortest_distance(node) + self.get_distance(node, target)
             ):
-                self.distance[target.id] = self.get_shortest_distance(node) + self.get_distance(node, target)
-                self.predecessors[target.id] = node
+                self.distance[target.position] = self.get_shortest_distance(node) + self.get_distance(node, target)
+                self.predecessors[target.position] = node
                 self.unSettledNodes.append(target)
-            i += 1
-    pass
+        pass
 
-    def get_path(self, target):
+    def get_path(self):
         vertexes = []
-        step = target
+        step = self.target
         # check if a vertexes exists
-        if self.predecessors.get(step.id) is None:
+        if self.predecessors.get(step.position) is None:
             return None
         vertexes.append(step)
-        while self.predecessors.get(step.id):
-            step = self.predecessors.get(step.id)
+        while self.predecessors.get(step.position):
+            step = self.predecessors.get(step.position)
             vertexes.append(step)
+        vertexes.append(self.start)
         vertexes.pop()
         vertexes.reverse()
         path = []
-        for i in range(vertexes.__len__() - 2):
-            if i >= 0:
-                for e in self.edges:
-                    if vertexes[i].equals(e.start) and vertexes[i + 1].equals(e.end):
-                        path.append(e)
+        length = vertexes.__len__() - 2
+        if length > 0:
+            for i in range(vertexes.__len__() - 1):
+                if i >= 0:
+                    for e in self.edges.values():
+                        if vertexes[i].equals(e.start) and vertexes[i + 1].equals(e.end):
+                            path.append(e)
+
         return path
+
+    def run(self):
+        print('ShortestPath Thread started!')
+        
+        path = self.execute().get_path()
+        self.events.set(EventNames.SHORTEST_PATH, path)
+        print('ShortestPath Thread finished!')
+        pass

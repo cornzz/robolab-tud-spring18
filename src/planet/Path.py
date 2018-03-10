@@ -10,4 +10,4 @@ class Path:
         pass
 
     def __str__(self):
-        return str(self.source.x) + ',' + str(self.source.y) + ',' + Direction.str(self.direction, True)
+        return 'Path(' + str(self.source) + ',' + Direction.str(self.direction, True) + ')'

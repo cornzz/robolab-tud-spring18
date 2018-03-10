@@ -3,19 +3,17 @@ from .Vertex import Vertex
 
 
 class Edge:
-    def __init__(self, _id: int,
+    def __init__(self, _id,
                  start: Vertex,
                  end: Vertex,
                  start_direction: Direction,
                  end_direction: Direction,
-                 weight: float,
-                 status: str):
+                 weight: float):
         self.id = _id
         self.start = start
         self.end = end
         self.start_direction = start_direction
         self.end_direction = end_direction
-        self.status = status
         self.weight = weight
         pass
 
@@ -23,5 +21,15 @@ class Edge:
         self.weight = weight
         pass
 
-    def tostring(self):
-        return self.start.tostring() + ' ' + self.end.tostring()
+    def equals(self, edge):
+        if self.id is edge.id \
+                and self.start.equals(edge.start) \
+                and self.end.equals(edge.end) \
+                and self.start_direction == edge.start_direction \
+                and self.end_direction == edge.end_direction:
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return 'Edge(' + str(self.start) + '-' + str(self.end) + ')'

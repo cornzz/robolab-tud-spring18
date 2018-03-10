@@ -1,5 +1,6 @@
-from events.EventRegistry import EventRegistry
-from events.EventNames import EventNames
+from src.shortest_path.ShortestPath import ShortestPath
+from src.events.EventRegistry import EventRegistry
+from src.events.EventNames import EventNames
 from .Direction import Direction
 from .Edge import Edge
 from .Graph import Graph
@@ -9,54 +10,60 @@ from typing import Tuple
 
 
 class Planet(Graph):
-    def __init__(self, vertexes, edges):
-        super().__init__(vertexes, edges)
+    def __init__(self):
+        super().__init__({}, {})
         self.curr_vertex = None
         self.curr_path = None
-        self.paths = []
+        self.paths = {}
         EventRegistry.instance().register_event_handler(EventNames.NEW_PATH, self.new_path)
         EventRegistry.instance().register_event_handler(EventNames.CURR_VERTEX, self.set_curr_vertex)
         pass
 
     def new_path(self, direction):
         path = self.add_path(self.curr_vertex, direction)
-
         print('new path: ', path)
         return self
 
     def combine_paths(self, start: Path, end: Path, length: float):
-        edge = Edge(self.edges.__len__(), start.source, end.source, start.direction, end.direction, length)
-        if edge not in self.edges:
-            self.edges.append(edge)
-            return edge
+        _id_to = (start.source.position, end.source.position)
+        _id_from = (end.source.position, start.source.position)
+        edge_to = Edge(_id_to, start.source, end.source, start.direction, end.direction, length)
+        edge_from = Edge(_id_from, end.source, start.source, end.direction, start.direction, length)
+        if _id_from not in self.edges and _id_to not in self.edges:
+            del self.paths[start.id]
+            del self.paths[end.id]
+            self.edges[_id_from] = edge_from
+            self.edges[_id_to] = edge_to
+            return edge_from, edge_to
         else:
             return None
 
     def add_vertex(self, position: Tuple[int, int]):
-        vertex = Vertex(self.vertexes.__len__(), position[0], position[1])
-        if vertex not in self.vertexes:
-            self.vertexes.append(vertex)
+        _id = position
+        vertex = Vertex(position)
+        if _id not in self.vertexes:
+            self.vertexes[_id] = vertex
             return vertex
         else:
             return None
 
-    def add_path(self, position: Vertex, direction: Direction):
-        path = Path(self.paths.__len__(), position, direction)
-        self.paths.append(path)
-        return path
-        # if path not in self.paths:
-        #     return path
-        # else:
-        #     return None
+    def add_path(self, source: Vertex, direction: Direction):
+        _id = (source.position, direction)
+        path = Path(_id, source, direction)
+        if _id not in self.paths:
+            self.paths[_id] = path
+            return path
+        else:
+            return None
 
-    def get_shortest_path(self, start: Vertex, end: Vertex):
-        # calculate shortest path
+    def get_shortest_path(self, end: Vertex):
+
         pass
 
     def get_next_path(self):
         # depth first
         if self.curr_vertex:
-            for path in self.paths:
+            for path in self.paths.values():
                 if self.curr_vertex == path.source:
                     self.curr_path = path
                     print('next path: ', path)
@@ -65,3 +72,6 @@ class Planet(Graph):
     def set_curr_vertex(self, vertex):
         self.curr_vertex = vertex
         pass
+
+    def get_paths(self):
+        return self.paths

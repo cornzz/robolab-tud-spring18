@@ -70,11 +70,14 @@ class Communication:
     # ---------------
     def receive_edge(self, start, end, status, weight):
         start = start.split(',')
-        start_direction = start[2]
-        start.pop(2)
         end = end.split(',')
-        end_direction = end[2]
-        end.pop(2)
+        start_vertex = Vertex('(' + start[0] + '|' + start[1] + ')', int(start[0]), int(start[1]))
+        end_vertex = Vertex('(' + end[0] + '|' + end[1] + ')', int(end[0]), int(end[1]))
+        _id = str(start_vertex) + str(end_vertex)
+        edge = Edge(_id, start_vertex, end_vertex, int(start[2]), int(end[2]), float(weight))
+        for e in self.planet.edges.values():
+            if not edge.equals(e):
+                self.planet.edges[edge.id] = edge
         pass
 
     def receive_target(self, target):

@@ -9,3 +9,4 @@ class EventNames(Enum):
     POSITION = 'POSITION'
     NEW_PATH = 'NEW_PATH'
     CURR_VERTEX = 'CURR_VERTEX'
+    SHORTEST_PATH = 'SHORTEST_PATH'

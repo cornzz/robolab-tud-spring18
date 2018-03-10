@@ -1,15 +1,13 @@
 class Vertex:
-    def __init__(self, _id, x, y):
-        self.id = _id
-        self.x = x
-        self.y = y
+    def __init__(self, position):
+        self.position = position
     pass
 
     def equals(self, obj):
-        if obj:
-            return self.id == obj.id
+        if obj and isinstance(obj, Vertex):
+            return self.position == obj.position
         else:
             return False
 
-    def tostring(self):
-        return 'Vertex_' + str(self.id) + '(' + str(self.x) + '|' + str(self.y) + ')'
+    def __str__(self):
+        return 'Vertex(' + str(self.position[0]) + '|' + str(self.position[1]) + ')'
