@@ -1,6 +1,6 @@
 from . import PathingAlgorithm
-from src.events.EventList import EventList
-from src.events.EventNames import EventNames
+from events.EventList import EventList
+from events.EventNames import EventNames
 
 
 class ShortestPath(PathingAlgorithm.PathingAlgorithm):
@@ -64,7 +64,7 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
 
     def run(self):
         print('ShortestPath Thread started!')
-        
+
         path = self.execute().get_path()
         self.events.set(EventNames.SHORTEST_PATH, path)
         print('ShortestPath Thread finished!')
