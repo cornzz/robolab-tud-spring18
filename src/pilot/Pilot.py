@@ -28,7 +28,7 @@ class Pilot:
     # simple or complex maneuvers (follow line, turn, stop, ...) are defined as methods
     # PILOT_MODE decides which maneuver is called in the main loop
 
-    def __init__(self, lm, rm, cs: ColorSensor):
+    def __init__(self, lm, rm, cs: ColorSensor, odometry):
         #  values
         self.mode = PilotModes.FOLLOW_LINE
         self.vertex = None
@@ -42,7 +42,8 @@ class Pilot:
         self.rm = rm
         # controllers, classes
         self.cs = cs
-        self.planet = Planet([], [])
+        self.odometry = odometry
+        self.planet = Planet()
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
 
@@ -142,10 +143,8 @@ class Pilot:
 
         self.turn(90)
 
-        self.lm.position = 0
-        self.rm.position = 0
         self.events.reset(EventNames.NEW_PATH)
-        self.choose_path()
+        self.mode = PilotModes.CHOOSE_PATH
         pass
 
     def choose_path(self):
@@ -166,7 +165,6 @@ class Pilot:
         elif turn_direction == 0:  # North (relative)
             self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
             self.rm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
-            time.sleep(0.1)
         elif turn_direction == 90:  # West (relative)
             turn_direction = 90
             self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
@@ -175,12 +173,14 @@ class Pilot:
             self.turn(turn_direction)
             self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
             self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
-        elif turn_direction == 180:  # South (relative)
+        elif turn_direction == 180 or turn_direction == -180:  # South (relative)
             self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
             self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            time.sleep(1)
             self.turn(90)
             self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
             self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+            time.sleep(1)
             self.turn(90)
             self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
             self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")

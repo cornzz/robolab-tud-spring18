@@ -17,6 +17,7 @@ class Odometry:
         self.heading = 0
         self.events = EventList()
         self.events.add(EventNames.POSITION)
+        self.prev_mpos = (0, 0)
         pass
 
     def calc_pos2(self, motor_position):
@@ -41,11 +42,12 @@ class Odometry:
 
     def calc_pos1(self, motor_position: Tuple[int, int]):
         # print(motor_position)
-        lec = motor_position[0]
-        rec = motor_position[1]
+        lec = motor_position[0] - self.prev_mpos[0]
+        rec = motor_position[1] - self.prev_mpos[1]
         displacement = (lec + rec) * ECF / 2
         rotation = (lec - rec) * ECF / TRACK
         # print(rotation)
+        self.prev_mpos = motor_position
         self.x = self.x + displacement * math.sin(self.heading + rotation / 2)
         self.y = self.y + displacement * math.cos(self.heading + rotation / 2)
         x = round(self.x / 50)
