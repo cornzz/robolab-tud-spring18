@@ -190,6 +190,15 @@ class Pilot:
         self.mode = PilotModes.FOLLOW_LINE
         pass
 
+    def wait(self, start_pos, target_pos, speed):
+        error = 0.1 * target_pos
+        dt = target_pos / speed * 1000  # dt in millis
+        start = time.time()
+        while self.lm.position - start_pos <= target_pos - error:
+            self.odometry.read_in((self.lm.position, self.rm.position))
+            if time.time() - start >= dt:
+                break
+
     def test(self, value, value2):
         print('test()')
         self.lm.run_to_rel_pos(position_sp=value, speed_sp=200, stop_action="hold")
