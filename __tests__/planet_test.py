@@ -63,9 +63,9 @@ class TestPlanet(unittest.TestCase):
 
     def set_sp(self, sp):
         expected = [
-            self.planet.edges[((0, -1), (0, 0))],
-            self.planet.edges[((0, 0), (1, 0))],
-            self.planet.edges[((1, 0), (2, 2))]
+            self.planet.edges[(((0, -1), 0), ((0, 0), 180))],
+            self.planet.edges[(((0, 0), 90), ((1, 0), 270))],
+            self.planet.edges[(((1, 0), 0), ((2, 2), 180))]
         ]
         i = 0
         for edge in sp:
@@ -114,24 +114,24 @@ def create_planet():
     planet.add_path(planet.vertexes[(0, 3)], Direction.SOUTH)
     planet.add_path(planet.vertexes[(0, 3)], Direction.EAST)
 
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 3), Direction.NORTH)], planet.paths[((0, 3), Direction.WEST)], 4)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 3), Direction.EAST)], planet.paths[((2, 2), Direction.NORTH)], 6)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 3), Direction.SOUTH)], planet.paths[((0, 2), Direction.NORTH)], 1)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 2), Direction.EAST)], planet.paths[((2, 2), Direction.WEST)], 2)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 2), Direction.SOUTH)], planet.paths[((0, 1), Direction.NORTH)], 1)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((2, 2), Direction.SOUTH)], planet.paths[((1, 0), Direction.NORTH)], 4)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 1), Direction.WEST)], planet.paths[((0, 0), Direction.WEST)], 3)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 1), Direction.SOUTH)], planet.paths[((0, 0), Direction.NORTH)], 1)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 0), Direction.EAST)], planet.paths[((1, 0), Direction.WEST)], 1)
-    planet.combine_paths(
+    planet.add_edge(
         planet.paths[((0, 0), Direction.SOUTH)], planet.paths[((0, -1), Direction.NORTH)], 2)
     return planet

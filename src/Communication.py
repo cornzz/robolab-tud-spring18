@@ -1,13 +1,17 @@
 import paho.mqtt.client as mqtt
 from planet.Path import Path
+from events.EventList import EventList
+from events.EventNames import EventNames
 
-CHANNEL = 'explorer/050'
 URL = 'robolab.inf.tu-dresden.de'
 PORT = 8883
 
 
 class Communication:
     def __init__(self, planet):
+        self.CHANNEL = 'explorer/050'
+        self.events = EventList()
+        self.events.add(EventNames.TARGET)
         self.planet = planet
         self.is_connected = False
         self.client = mqtt.Client(client_id='050', clean_session=False, protocol=mqtt.MQTTv31)
@@ -30,14 +34,14 @@ class Communication:
         pass
 
     def emit(self, payload):
-        self.client.publish(CHANNEL, payload, qos=1, retain=False)
+        self.client.publish(self.CHANNEL, payload, qos=1, retain=False)
         pass
 
     def start(self):
         if not self.is_connected:
             self.client.connect(URL, port=PORT)
             self.is_connected = True
-        self.client.subscribe(CHANNEL, qos=1)
+        self.client.subscribe(self.CHANNEL, qos=1)
         self.client.loop_start()
         pass
 
@@ -81,10 +85,16 @@ class Communication:
         pass
 
     def receive_target(self, target):
-
+        target = target.split(',')
+        vertex = self.planet.vertex_exists((target[0], target[1]))
+        if vertex:
+            self.planet.get_shortest_path(vertex)
+            self.events.set(EventNames.TARGET, (target[0], target[1]))
+        else:
+            self.planet.add_vertex((target[0], target[1]))
         pass
 
     def receive_planet(self, planet, point):
-        CHANNEL = planet
-        self.client.subscribe(CHANNEL, qos=1)
+        self.CHANNEL = planet
+        self.client.subscribe(self.CHANNEL, qos=1)
         pass

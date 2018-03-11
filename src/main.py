@@ -14,6 +14,7 @@ ts = TouchSensor()
 odometry = Odometry()
 pilot = Pilot(lm, rm, cs, odometry)
 
+
 def init():
     lm = ev3.LargeMotor('outA')
     rm = ev3.LargeMotor('outD')
@@ -22,9 +23,9 @@ def init():
     odometry = Odometry()
     pilot = Pilot(lm, rm, cs, odometry)
 
+
 def run():
     # init classes
-
     lm.position = 0
     rm.position = 0
     i = 0

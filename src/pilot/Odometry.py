@@ -20,26 +20,6 @@ class Odometry:
         self.prev_mpos = (0, 0)
         pass
 
-    def calc_pos2(self, motor_position):
-        lec = motor_position[0]
-        rec = motor_position[1]
-        print(motor_position)
-        rl = TRACK / (rec - lec) * lec
-        rm = rl + TRACK / 2
-        alpha = rec / (TRACK + rl)
-        rotation = alpha / 2
-        print(rotation)
-        m = 2 * rm * math.sin(rotation)
-        print(m)
-        self.heading = self.heading + rotation
-        dx = m * math.cos(rotation)
-        dy = m * math.sin(rotation)
-        print(dx, dy)
-        self.x = self.x + round(dx / 50)
-        self.y = self.y + round(dy / 50)
-        self.events.set(EventNames.POSITION, (self.x, self.y, self.heading))
-        return self.x, self.y, self.heading
-
     def calc_pos1(self, motor_position: Tuple[int, int]):
         # print(motor_position)
         lec = motor_position[0] - self.prev_mpos[0]
