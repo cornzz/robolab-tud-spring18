@@ -7,6 +7,7 @@ class PilotModes(IntEnum):
     FOLLOW_LINE = 0
     CHECK_ISC = 1
     CHOOSE_PATH = 2
+    FOLLOW_LINE_ODO = 5
 
     # top-level modes
     EXPLORE = 3

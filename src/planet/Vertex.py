@@ -1,5 +1,6 @@
 class Vertex:
     def __init__(self, position):
+        self.id = position
         self.position = position
     pass
 

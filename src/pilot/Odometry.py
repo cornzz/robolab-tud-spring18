@@ -12,6 +12,8 @@ ECF = math.pi * WHEEL_DIAMETER / 360
 
 class Odometry:
     def __init__(self):
+        self.dx = 0
+        self.dy = 0
         self.x = 0
         self.y = 0
         self.heading = 0
@@ -28,14 +30,21 @@ class Odometry:
         rotation = (lec - rec) * ECF / TRACK
         # print(rotation)
         self.prev_mpos = motor_position
-        self.x = self.x + displacement * math.sin(self.heading + rotation / 2)
-        self.y = self.y + displacement * math.cos(self.heading + rotation / 2)
-        x = round(self.x / 50)
-        y = round(self.y / 50)
+        self.dx = self.dx + displacement * math.sin(self.heading + rotation / 2)
+        self.dy = self.dy + displacement * math.cos(self.heading + rotation / 2)
         self.heading = self.heading + rotation
         heading = Direction.format(Direction.to_deg(self.heading))
-        self.events.set(EventNames.POSITION, (x, y, heading, Direction.str(heading, True)))
-        return x, y, self.heading
+        # print(self.dx, self.dy, heading, Direction.str(heading, True))
+        return self.x, self.y, self.heading
+
+    def add_pos(self):
+        self.x += round(self.dx / 50)
+        self.y += round(self.dy / 50)
+        heading = Direction.format(Direction.to_deg(self.heading))
+        self.events.set(EventNames.POSITION, (self.x, self.y, heading, Direction.str(heading, True)))
+        self.dx = 0
+        self.dy = 0
+
 
     # ---------
     # SETTER
@@ -44,10 +53,12 @@ class Odometry:
         # self.vertex = Planet
         pass
 
+
     # ---------
     # GETTER
     # ---------
     def read_in(self, motor_position):
+        # print('odometry calculated')
         return self.calc_pos1(motor_position)
 
     def get_direction(self):

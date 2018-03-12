@@ -8,6 +8,7 @@ from events.EventRegistry import EventRegistry
 from events.EventList import EventList
 from planet.Direction import Direction
 from planet.Planet import Planet
+from planet.Path import Path
 from ev3dev import ev3
 from typing import Tuple
 import time
@@ -37,6 +38,7 @@ class Pilot:
         self.color = None
         self.rbd = None
         self.touch = False
+        self.counter = 0
         # motors
         self.lm = lm
         self.rm = rm
@@ -46,17 +48,20 @@ class Pilot:
         self.planet = Planet()
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
-        EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
+        self.remove_set_color = EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
         EventRegistry.instance().register_event_handler(EventNames.TOUCH, self.set_touch)
         EventRegistry.instance().register_event_handler(EventNames.POSITION, self.set_position)
         pass
 
+    def unregister(self):
+        self.remove_set_color()
+
     def run(self):
-        if self.mode is PilotModes.FOLLOW_LINE:
+        if self.mode == PilotModes.FOLLOW_LINE or self.mode == PilotModes.FOLLOW_LINE_ODO:
             self.follow_line()
-        elif self.mode is PilotModes.CHECK_ISC:
+        elif self.mode == PilotModes.CHECK_ISC:
             self.check_isc()
-        elif self.mode is PilotModes.CHOOSE_PATH:
+        elif self.mode == PilotModes.CHOOSE_PATH:
             self.choose_path()
         pass
 
@@ -98,16 +103,30 @@ class Pilot:
         time.sleep(duration)
         pass
 
+    def turn_odo(self, degrees):
+        # turn by degrees
+        p_sp = 2.88 * degrees
+        self.lm.run_to_rel_pos(position_sp=-p_sp, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
+        print('Turning: ' + str(degrees) + ' degrees.')
+        self.wait(self.rm.position, p_sp, 200)
+        # duration = abs(degrees) / 90 * 1.3
+        # time.sleep(duration)
+        pass
+
     def check_isc(self):
         print('check_isc()')
         self.stop_motors()
+        self.odometry.add_pos()
         print(self.position)
+
         vertex = self.planet.add_vertex((self.position[0], self.position[1]))
         path = Path(vertex, (self.position[2] + Direction.SOUTH) % 360)
-        edges = self.planet.add_edge(self.planet.curr_path, path, 0)
-        print('new edge: ', edges[0], edges[1])
+        if self.counter != 0:
+            edges = self.planet.add_edge(self.planet.curr_path, path, 0)
+            print('new edge: ', edges[0], edges[1])
         self.planet.set_curr_vertex(vertex)
-
+        self.counter += 1
         self.turn(-90)
         print('Turning: 362 degrees.')
 
@@ -134,8 +153,11 @@ class Pilot:
                 # print('path detected: ' + str(direction))
                 self.planet.add_path(self.planet.curr_vertex, direction)
                 time.sleep(0.5)
-
+        self.planet.add_path(self.planet.curr_vertex, path.direction)
         self.turn(90)
+        self.lm.position = 0
+        self.rm.position = 0
+        self.odometry.prev_mpos = (0, 0)
         self.mode = PilotModes.CHOOSE_PATH
         pass
 
@@ -151,46 +173,55 @@ class Pilot:
                 turn_direction = 90
 
             if turn_direction == -90:  # East (relative)
-                self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-                time.sleep(1)
-                self.turn(turn_direction)
+                self.lm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 75, 200)
+                self.turn_odo(turn_direction)
             elif turn_direction == 0:  # North (relative)
                 self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 120, 200)
             elif turn_direction == 90:  # West (relative)
-                turn_direction = 90
-                self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
-                time.sleep(1)
-                self.turn(turn_direction)
                 self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 100, 200)
+                self.turn_odo(turn_direction)
+                self.lm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 90, 200)
             elif turn_direction == 180 or turn_direction == -180:  # South (relative)
-                self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-                time.sleep(1)
-                self.turn(90)
-                self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-                time.sleep(1)
-                self.turn(90)
-                self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
+                self.lm.run_to_rel_pos(position_sp=80, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=80, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 80, 200)
+                self.turn_odo(90)
+                self.lm.run_to_rel_pos(position_sp=35, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=35, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 35, 200)
+                self.turn_odo(90)
+                self.lm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 90, 200)
 
-            time.sleep(2)
+            time.sleep(1)
 
-            self.mode = PilotModes.FOLLOW_LINE
+            self.mode = PilotModes.FOLLOW_LINE_ODO
         pass
 
     def wait(self, start_pos, target_pos, speed):
-        error = 0.1 * target_pos
-        dt = target_pos / speed * 1000  # dt in millis
+        i = 5
+        target_pos = abs(target_pos)
+        start_pos = abs(start_pos)
+        error = 0.01 * target_pos
+        dt = target_pos / speed + 0.5  # dt in millis
         start = time.time()
         while self.lm.position - start_pos <= target_pos - error:
-            self.odometry.read_in((self.lm.position, self.rm.position))
+            if i == 5:
+                self.odometry.read_in((self.lm.position, self.rm.position))
+                i = 0
+            i += 1
             if time.time() - start >= dt:
                 break
+            # print(start, time.time() - start, dt)
 
     def test(self, value, value2):
         print('test()')
@@ -219,7 +250,6 @@ class Pilot:
         elif self.rbd <= -65:    # blue patch
             print('Patch: blue')
             self.stop_motors()
-            time.sleep(0.4)
             self.lm.run_to_rel_pos(position_sp=-35, speed_sp=180, stop_action="hold")
             time.sleep(0.1)
             self.mode = PilotModes.CHECK_ISC
