@@ -18,6 +18,7 @@ class Communication:
         self.client.on_message = self.receive
         self.client.username_pw_set('050', password='Cbqs7BF5LS')
         self.edge_send = None
+        self.test_planet = 'Terrabyte'
 
     def receive(self, client, data, message):
         if message:
@@ -25,6 +26,7 @@ class Communication:
             payload = message.payload.decode('utf-8').split(' ')
             signature = payload[0]
             command = payload[1]
+            print('Message received: ', message.payload.decode('utf-8'))
             if signature == 'ACK':
                 if command == 'path' and payload.__len__() == 6:
                     self.receive_edge(payload[2], payload[3], payload[4], payload[5])
@@ -36,6 +38,7 @@ class Communication:
 
     def emit(self, payload):
         payload = 'SYN ' + payload
+        print('Message send: ', payload)
         self.client.publish(self.CHANNEL, payload, qos=1, retain=False)
         pass
 
@@ -55,6 +58,10 @@ class Communication:
     # ---------------
     # MESSAGES - OUT
     # ---------------
+    def send_test_planet(self):
+        self.emit('testplanet ' + self.test_planet)
+        pass
+
     def send_exploration_completed(self):
         self.emit('exploration completed!')
         pass
@@ -97,7 +104,7 @@ class Communication:
         start_vertex = Vertex((start_x, start_y))
         end_vertex = Vertex((end_x, end_y))
         edge = Edge(start_vertex, end_vertex, start_direction, end_direction, float(weight))
-
+        edge.known = self.edge_send.known
         if self.edge_send and edge.start.equals(self.edge_send.start):
             if self.edge_send in self.planet.edges:
                 del self.planet.edges[self.edge_send.id]

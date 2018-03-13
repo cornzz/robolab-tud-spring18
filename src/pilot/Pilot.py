@@ -16,8 +16,8 @@ import time
 
 # constants
 K_P = 0.62
-K_I = 0.05
-K_D = 0.3
+K_I = 0.075
+K_D = 0.35
 I_MAX = 100
 SETPOINT = 330
 SPEED_MAX = 100
@@ -56,9 +56,6 @@ class Pilot:
         EventRegistry.instance().register_event_handler(EventNames.POSITION, self.set_position)
         pass
 
-    def unregister(self):
-        self.remove_set_color()
-
     def run(self):
         if self.mode == PilotModes.FOLLOW_LINE or self.mode == PilotModes.FOLLOW_LINE_ODO:
             self.follow_line()
@@ -89,6 +86,8 @@ class Pilot:
 
     def blocked_path(self):
         self.stop_motors()
+        self.lm.command = 'reset'
+        self.rm.command = 'reset'
         time.sleep(0.3)
         print('path blocked.')
         self.lm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
@@ -136,48 +135,57 @@ class Pilot:
         self.stop_motors()
         self.odometry.add_pos()
         print(self.position)
-
-        vertex = self.planet.add_vertex((self.position[0], self.position[1]))
+        if self.counter == 0:
+            self.communication.send_ready()
+            time.sleep(1)
+        vertex = self.planet.vertex_exists((self.position[0], self.position[1]))
+        existing_vertex = bool(vertex)
+        if not existing_vertex:
+            vertex = self.planet.add_vertex((self.position[0], self.position[1]))
+        self.planet.set_curr_vertex(vertex)
         path = Path(vertex, (self.position[2] + Direction.SOUTH) % 360)
+        if not existing_vertex:
+            self.turn(-90)
+            print('Turning: 362 degrees.')
+
+            self.rm.position = 0
+            target_pos = self.turn_motor('rm', 362)
+            eighth = target_pos / 8
+            while self.rm.position < target_pos - 10:
+                # print(self.rm.position)
+                gs = self.cs.get_greyscale()
+                if gs < 100:
+                    direction = self.position[2]
+                    if target_pos - 7 * eighth <= self.rm.position <= target_pos - 5 * eighth:
+                        direction += Direction.EAST
+                        # print('right path detected: ' + str(direction))
+                    elif target_pos - 5 * eighth <= self.rm.position <= target_pos - 3 * eighth:
+                        direction += Direction.NORTH
+                        # print('straight path detected: ' + str(direction))
+                    elif target_pos - 3 * eighth <= self.rm.position <= target_pos - 1 * eighth:
+                        direction += Direction.WEST
+                        # print('left path detected: ' + str(direction))
+                    else:
+                        continue
+                    direction = direction % 360
+                    # print('path detected: ' + str(direction))
+                    self.planet.add_path(self.planet.curr_vertex, direction)
+                    time.sleep(0.5)
+            if self.counter != 0:
+                self.planet.add_path(self.planet.curr_vertex, path.direction)
+            self.turn(90)
+            pass
         if self.counter != 0:
             edge = None
             if self.status == 'free':
                 edge = self.planet.add_edge(self.planet.curr_path, path, 0)
             else:
                 edge = self.planet.add_edge(self.planet.curr_path, self.planet.curr_path, -1)
+                self.status = 'blocked'
             if edge:
                 print('new edge: ', edge)
                 self.communication.send_edge(edge, self.status)
-        self.planet.set_curr_vertex(vertex)
         self.counter += 1
-        self.turn(-90)
-        print('Turning: 362 degrees.')
-
-        self.rm.position = 0
-        target_pos = self.turn_motor('rm', 362)
-        eighth = target_pos / 8
-        while self.rm.position < target_pos - 10:
-            # print(self.rm.position)
-            gs = self.cs.get_greyscale()
-            if gs < 100:
-                direction = self.position[2]
-                if target_pos - 7 * eighth <= self.rm.position <= target_pos - 5 * eighth:
-                    direction += Direction.EAST
-                    # print('right path detected: ' + str(direction))
-                elif target_pos - 5 * eighth <= self.rm.position <= target_pos - 3 * eighth:
-                    direction += Direction.NORTH
-                    # print('straight path detected: ' + str(direction))
-                elif target_pos - 3 * eighth <= self.rm.position <= target_pos - 1 * eighth:
-                    direction += Direction.WEST
-                    # print('left path detected: ' + str(direction))
-                else:
-                    continue
-                direction = direction % 360
-                # print('path detected: ' + str(direction))
-                self.planet.add_path(self.planet.curr_vertex, direction)
-                time.sleep(0.5)
-        self.planet.add_path(self.planet.curr_vertex, path.direction)
-        self.turn(90)
         self.lm.command = 'reset'
         self.rm.command = 'reset'
         # self.stop_motors()
@@ -241,7 +249,7 @@ class Pilot:
         target_pos = abs(target_pos)
         start_pos = abs(start_pos)
         error = 0.01 * target_pos
-        dt = target_pos / speed + 0.5  # dt in millis
+        dt = target_pos / speed + 0.5  # dt in s
         start = time.time()
         while self.lm.position - start_pos <= target_pos - error:
             if i == 5:
@@ -250,7 +258,6 @@ class Pilot:
             i += 1
             if time.time() - start >= dt:
                 break
-            # print(start, time.time() - start, dt)
 
     def test(self, value, value2):
         print('test()')

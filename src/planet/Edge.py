@@ -10,6 +10,7 @@ class Edge:
         self.start_direction = start_direction
         self.end_direction = end_direction
         self.weight = weight
+        self.known = 0
         pass
 
     def set_weight(self, weight):
@@ -27,4 +28,4 @@ class Edge:
             return False
 
     def __str__(self):
-        return 'Edge(' + str(self.start) + '-' + str(self.end) + ')'
+        return 'Edge(' + str(self.start) + '-' + str(self.end) + '|' + str(self.weight) + ')'

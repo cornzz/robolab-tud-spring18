@@ -31,14 +31,14 @@ class Planet(Graph):
         edge_from = Edge(end.source, start.source, end.direction, start.direction, length)
         if edge_from.id not in self.edges and edge_to.id not in self.edges:
             if start.id in self.paths:
+                print('deleting path: ', self.paths[start.id])
                 del self.paths[start.id]
             if end.id in self.paths:
+                print('deleting path: ', self.paths[end.id])
                 del self.paths[end.id]
             self.edges[edge_from.id] = edge_from
             self.edges[edge_to.id] = edge_to
-            for path in self.paths:
-                print(path)
-            return edge_from
+            return edge_to
         else:
             return None
 
@@ -101,10 +101,17 @@ class Planet(Graph):
             # depth first
             if self.curr_vertex:
                 for path in self.paths.values():
-                    if self.curr_vertex == path.source:
+                    if self.curr_vertex.equals(path.source):
                         self.curr_path = path
-                        print('next path: ', path)
-                        return path
+                        print('next path: ', self.curr_path)
+                        return self.curr_path
+                for edge in self.edges.values():
+                    if self.curr_vertex.equals(edge.start) and edge.weight != -1 and edge.known == 0:
+                        edge.known += 1
+                        self.curr_path = Path(edge.start, edge.start_direction)
+                        print('next path: ', self.curr_path)
+                        return self.curr_path
+                print('I am stuck here!')
         elif self.mode == PilotModes.TARGET and self.shortest_path:
             edge = self.shortest_path[self.shortest_path_counter]
             self.shortest_path_counter += 1
