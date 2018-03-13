@@ -161,8 +161,11 @@ class Pilot:
                 time.sleep(0.5)
         self.planet.add_path(self.planet.curr_vertex, path.direction)
         self.turn(90)
-        self.lm.position = 0
-        self.rm.position = 0
+        self.lm.command = 'reset'
+        self.rm.command = 'reset'
+        # self.stop_motors()
+        # self.lm.position = 0
+        # self.rm.position = 0
         self.odometry.prev_mpos = (0, 0)
         self.mode = PilotModes.CHOOSE_PATH
         pass
@@ -183,10 +186,13 @@ class Pilot:
                 self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
                 self.wait(self.lm.position, 75, 200)
                 self.turn_odo(turn_direction)
+                self.lm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 75, 200)
             elif turn_direction == 0:  # North (relative)
-                self.lm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=120, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 120, 200)
+                self.lm.run_to_rel_pos(position_sp=150, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=150, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 150, 200)
             elif turn_direction == 90:  # West (relative)
                 self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
@@ -200,9 +206,9 @@ class Pilot:
                 self.rm.run_to_rel_pos(position_sp=80, speed_sp=200, stop_action="hold")
                 self.wait(self.lm.position, 80, 200)
                 self.turn_odo(90)
-                self.lm.run_to_rel_pos(position_sp=35, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=35, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 35, 200)
+                self.lm.run_to_rel_pos(position_sp=50, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=50, speed_sp=200, stop_action="hold")
+                self.wait(self.lm.position, 50, 200)
                 self.turn_odo(90)
                 self.lm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
