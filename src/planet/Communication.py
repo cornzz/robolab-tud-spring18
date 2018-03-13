@@ -18,7 +18,7 @@ class Communication:
         self.client.on_message = self.receive
         self.client.username_pw_set('050', password='Cbqs7BF5LS')
         self.edge_send = None
-        self.test_planet = 'Terrabyte'
+        self.test_planet = 'Vulcan'
 
     def receive(self, client, data, message):
         if message:
