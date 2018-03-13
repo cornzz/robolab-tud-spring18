@@ -140,11 +140,14 @@ class Pilot:
         vertex = self.planet.add_vertex((self.position[0], self.position[1]))
         path = Path(vertex, (self.position[2] + Direction.SOUTH) % 360)
         if self.counter != 0:
-            edges = self.planet.add_edge(self.planet.curr_path, path, 0)
-            if edges:
-                print('new edge: ', edges[0], edges[1])
-                self.communication.send_edge(edges[0], self.status)
-                self.communication.send_edge(edges[1], self.status)
+            edge = None
+            if self.status == 'free':
+                edge = self.planet.add_edge(self.planet.curr_path, path, 0)
+            else:
+                edge = self.planet.add_edge(self.planet.curr_path, self.planet.curr_path, -1)
+            if edge:
+                print('new edge: ', edge)
+                self.communication.send_edge(edge, self.status)
         self.planet.set_curr_vertex(vertex)
         self.counter += 1
         self.turn(-90)

@@ -38,7 +38,7 @@ class Planet(Graph):
             self.edges[edge_to.id] = edge_to
             for path in self.paths:
                 print(path)
-            return edge_from, edge_to
+            return edge_from
         else:
             return None
 

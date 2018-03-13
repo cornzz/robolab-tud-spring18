@@ -68,8 +68,14 @@ class Communication:
         pass
 
     def send_edge(self, edge: Edge, status):
-        start_str = edge.start.position[0] + ',' + edge.start.position[1] + ',' + Direction.str(edge.start_direction, False)
-        end_str = edge.end.position[0] + ',' + edge.end.position[1] + ',' + Direction.str(edge.end_direction, False)
+        start_x = str(edge.start.position[0])
+        start_y = str(edge.start.position[1])
+        start_direction = Direction.str(edge.start_direction, False)
+        end_x = str(edge.end.position[0])
+        end_y = str(edge.end.position[1])
+        end_direction = Direction.str(edge.end_direction, False)
+        start_str = start_x + ',' + start_y + ',' + start_direction
+        end_str = end_x + ',' + end_y + ',' + end_direction
         payload = 'path ' + start_str + ' ' + end_str + ' ' + status
         self.edge_send = edge
         self.emit(payload)
