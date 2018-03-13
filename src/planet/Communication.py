@@ -1,7 +1,9 @@
 import paho.mqtt.client as mqtt
-from planet.Path import Path
-from events.EventList import EventList
-from events.EventNames import EventNames
+from .Direction import Direction
+from .Vertex import Vertex
+from .Path import Path
+from .Edge import Edge
+
 
 URL = 'robolab.inf.tu-dresden.de'
 PORT = 8883
@@ -10,13 +12,12 @@ PORT = 8883
 class Communication:
     def __init__(self, planet):
         self.CHANNEL = 'explorer/050'
-        self.events = EventList()
-        self.events.add(EventNames.TARGET)
         self.planet = planet
         self.is_connected = False
         self.client = mqtt.Client(client_id='050', clean_session=False, protocol=mqtt.MQTTv31)
         self.client.on_message = self.receive
-        self.client.username_pw_set('050', password='gruppe50')
+        self.client.username_pw_set('050', password='Cbqs7BF5LS')
+        self.edge_send = None
 
     def receive(self, client, data, message):
         if message:
@@ -24,16 +25,17 @@ class Communication:
             payload = message.payload.decode('utf-8').split(' ')
             signature = payload[0]
             command = payload[1]
-            if signature is 'ACK':
-                if command is 'path' and payload.__len__() == 6:
+            if signature == 'ACK':
+                if command == 'path' and payload.__len__() == 6:
                     self.receive_edge(payload[2], payload[3], payload[4], payload[5])
-                elif command is 'target' and payload.__len__() == 3:
+                elif command == 'target' and payload.__len__() == 3:
                     self.receive_target(payload[2])
                 elif payload.__len__() == 3:
                     self.receive_planet(command, payload[2])
         pass
 
     def emit(self, payload):
+        payload = 'SYN ' + payload
         self.client.publish(self.CHANNEL, payload, qos=1, retain=False)
         pass
 
@@ -54,19 +56,22 @@ class Communication:
     # MESSAGES - OUT
     # ---------------
     def send_exploration_completed(self):
-        self.emit('SYN exploration completed!')
+        self.emit('exploration completed!')
         pass
 
     def send_target_reached(self):
-        self.emit('SYN target reached!')
+        self.emit('target reached!')
         pass
 
     def send_ready(self):
-        self.emit('SYN ready')
+        self.emit('ready')
         pass
 
-    def send_edge(self, start: Path, end: Path):
-        payload = start.tostring() + ' ' + end.tostring()
+    def send_edge(self, edge: Edge, status):
+        start_str = edge.start.position[0] + ',' + edge.start.position[1] + ',' + Direction.str(edge.start_direction, False)
+        end_str = edge.end.position[0] + ',' + edge.end.position[1] + ',' + Direction.str(edge.end_direction, False)
+        payload = 'path ' + start_str + ' ' + end_str + ' ' + status
+        self.edge_send = edge
         self.emit(payload)
 
     # ---------------
@@ -75,13 +80,23 @@ class Communication:
     def receive_edge(self, start, end, status, weight):
         start = start.split(',')
         end = end.split(',')
-        start_vertex = Vertex('(' + start[0] + '|' + start[1] + ')', int(start[0]), int(start[1]))
-        end_vertex = Vertex('(' + end[0] + '|' + end[1] + ')', int(end[0]), int(end[1]))
-        _id = str(start_vertex) + str(end_vertex)
-        edge = Edge(_id, start_vertex, end_vertex, int(start[2]), int(end[2]), float(weight))
-        for e in self.planet.edges.values():
-            if not edge.equals(e):
-                self.planet.edges[edge.id] = edge
+
+        start_x = int(start[0])
+        start_y = int(start[1])
+        start_direction = int(start[2])
+        end_x = int(end[0])
+        end_y = int(end[1])
+        end_direction = int(end[2])
+
+        start_vertex = Vertex((start_x, start_y))
+        end_vertex = Vertex((end_x, end_y))
+        edge = Edge(start_vertex, end_vertex, start_direction, end_direction, float(weight))
+
+        if self.edge_send and edge.start.equals(self.edge_send.start):
+            if self.edge_send in self.planet.edges:
+                del self.planet.edges[self.edge_send.id]
+            self.planet.edges[edge.id] = edge
+        self.edge_send = None
         pass
 
     def receive_target(self, target):
@@ -89,12 +104,16 @@ class Communication:
         vertex = self.planet.vertex_exists((target[0], target[1]))
         if vertex:
             self.planet.get_shortest_path(vertex)
-            self.events.set(EventNames.TARGET, (target[0], target[1]))
+            self.planet.set_target_mode()
         else:
-            self.planet.add_vertex((target[0], target[1]))
+            vertex = self.planet.add_vertex((target[0], target[1]))
+        self.planet.set_target(vertex)
         pass
 
     def receive_planet(self, planet, point):
-        self.CHANNEL = planet
+        self.CHANNEL = 'planet/' + planet
         self.client.subscribe(self.CHANNEL, qos=1)
+        point = point.split(',')
+        vertex = Vertex((point[0], point[1]))
+        self.planet.set_curr_vertex(vertex)
         pass

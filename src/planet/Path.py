@@ -3,7 +3,7 @@ from .Vertex import Vertex
 
 
 class Path:
-    def __init__(self, source: Vertex, direction: Direction):
+    def __init__(self, source: Vertex, direction):
         self.id = (source.position, direction)
         self.source = source
         self.direction = direction

@@ -17,10 +17,10 @@ class Planet(Graph):
         self.shortest_path_counter = 0
         self.curr_vertex = None
         self.curr_path = None
+        self.target = None
         self.mode = PilotModes.EXPLORE
         self.paths = {}
         EventRegistry.instance().register_event_handler(EventNames.SHORTEST_PATH, self.set_shortest_path)
-        EventRegistry.instance().register_event_handler(EventNames.TARGET, self.set_target_mode)
         pass
 
     # ---------
@@ -75,8 +75,12 @@ class Planet(Graph):
         self.curr_vertex = vertex
         pass
 
-    def set_target_mode(self, target):
+    def set_target_mode(self):
         self.mode = EventNames.TARGET
+        pass
+
+    def set_target(self, target):
+        self.target = target
         pass
 
     # ---------

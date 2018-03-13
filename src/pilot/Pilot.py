@@ -6,6 +6,7 @@ from .Odometry import Odometry
 from events.EventNames import EventNames
 from events.EventRegistry import EventRegistry
 from events.EventList import EventList
+from planet.Communication import Communication
 from planet.Direction import Direction
 from planet.Planet import Planet
 from planet.Path import Path
@@ -29,7 +30,7 @@ class Pilot:
     # simple or complex maneuvers (follow line, turn, stop, ...) are defined as methods
     # PILOT_MODE decides which maneuver is called in the main loop
 
-    def __init__(self, lm, rm, cs: ColorSensor, odometry):
+    def __init__(self, lm, rm, cs: ColorSensor, odometry: Odometry, communication: Communication):
         #  values
         self.mode = PilotModes.FOLLOW_LINE
         self.vertex = None
@@ -39,13 +40,15 @@ class Pilot:
         self.rbd = None
         self.touch = False
         self.counter = 0
+        self.status = 'free'
         # motors
         self.lm = lm
         self.rm = rm
         # controllers, classes
         self.cs = cs
         self.odometry = odometry
-        self.planet = Planet()
+        self.planet = communication.planet
+        self.communication = communication
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
         self.remove_set_color = EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
@@ -124,7 +127,10 @@ class Pilot:
         path = Path(vertex, (self.position[2] + Direction.SOUTH) % 360)
         if self.counter != 0:
             edges = self.planet.add_edge(self.planet.curr_path, path, 0)
-            print('new edge: ', edges[0], edges[1])
+            if edges:
+                print('new edge: ', edges[0], edges[1])
+                self.communication.send_edge(edges[0], self.status)
+                self.communication.send_edge(edges[1], self.status)
         self.planet.set_curr_vertex(vertex)
         self.counter += 1
         self.turn(-90)

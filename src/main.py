@@ -3,6 +3,8 @@ from pilot.TouchSensor import TouchSensor
 from pilot.PilotModes import PilotModes
 from pilot.Odometry import Odometry
 from pilot.Pilot import Pilot
+from planet.Planet import Planet
+from planet.Communication import Communication
 import ev3dev.ev3 as ev3
 
 # init ev3
@@ -12,7 +14,9 @@ rm = ev3.LargeMotor('outD')
 cs = ColorSensor()
 ts = TouchSensor()
 odometry = Odometry()
-pilot = Pilot(lm, rm, cs, odometry)
+planet = Planet()
+communication = Communication(planet)
+pilot = Pilot(lm, rm, cs, odometry, communication)
 
 
 def init(lm, rm, cs, ts, odometry, pilot):

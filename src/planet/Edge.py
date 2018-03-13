@@ -3,12 +3,7 @@ from .Vertex import Vertex
 
 
 class Edge:
-    def __init__(self,
-                 start: Vertex,
-                 end: Vertex,
-                 start_direction: Direction,
-                 end_direction: Direction,
-                 weight: float):
+    def __init__(self, start: Vertex, end: Vertex, start_direction, end_direction, weight: float):
         self.id = ((start.position, start_direction), (end.position, end_direction))
         self.start = start
         self.end = end
