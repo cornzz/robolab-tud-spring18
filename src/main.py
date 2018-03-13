@@ -8,7 +8,7 @@ from planet.Communication import Communication
 import ev3dev.ev3 as ev3
 
 # init ev3
-
+btn = ev3.Button()
 lm = ev3.LargeMotor('outA')
 rm = ev3.LargeMotor('outD')
 cs = ColorSensor()
@@ -35,10 +35,12 @@ def run():
     rm.position = 0
     i = 0
     # this is the main loop
-    while not ts.read_in():
+    while not btn.any():
         # read from sensors
         # sensor classes emit events with fresh input
         # classes that depend on should register to those events
+        if ts.read_in():
+            pilot.blocked_path()
         if i == 5 and pilot.mode == PilotModes.FOLLOW_LINE_ODO:
             odometry.read_in((lm.position, rm.position))
             i = 0

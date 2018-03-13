@@ -87,6 +87,20 @@ class Pilot:
             # print(speed)
         pass
 
+    def blocked_path(self):
+        self.stop_motors()
+        time.sleep(0.3)
+        print('path blocked.')
+        self.lm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
+        self.wait(self.lm.position, 200, 200)
+        self.turn_odo(90)
+        self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+        self.wait(self.lm.position, 60, 200)
+        self.turn_odo(90)
+        pass
+
     def turn_motor(self, motor, degrees):
         # turn by degrees
         p_sp = 5.7361 * degrees
