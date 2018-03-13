@@ -45,14 +45,13 @@ class Odometry:
         self.dx = 0
         self.dy = 0
 
-
     # ---------
     # SETTER
     # ---------
-    def set_vertex(self, position):
-        # self.vertex = Planet
+    def set_position(self, position):
+        self.x = position[0]
+        self.y = position[1]
         pass
-
 
     # ---------
     # GETTER

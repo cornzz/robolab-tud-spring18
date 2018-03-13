@@ -3,6 +3,9 @@ from enum import unique, Enum
 
 @unique
 class EventNames(Enum):
+    # main
+    TARGET_REACHED = 'TARGET_REACHED'
+    EXPLORATION_FINISHED = 'EXPLORATION_FINISHED'
     # sensors
     COLOR = 'COLOR'
     TOUCH = 'TOUCH'

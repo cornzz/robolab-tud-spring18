@@ -5,7 +5,7 @@ class Vertex:
     pass
 
     def equals(self, obj):
-        if obj and isinstance(obj, Vertex):
+        if obj:
             return self.position == obj.position
         else:
             return False

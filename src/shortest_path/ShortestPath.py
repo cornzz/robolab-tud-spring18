@@ -1,6 +1,7 @@
 from . import PathingAlgorithm
 from events.EventList import EventList
 from events.EventNames import EventNames
+import time
 
 
 class ShortestPath(PathingAlgorithm.PathingAlgorithm):
@@ -12,6 +13,7 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
         self.predecessors = {}
         self.events = EventList()
         self.events.add(EventNames.SHORTEST_PATH)
+        self.start_time = time.time()
         pass
 
     def execute(self):
@@ -23,7 +25,8 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
             self.settledNodes.append(node)
             self.unSettledNodes.remove(node)
             self.find_minimal_distances(node)
-
+            if time.time() - self.start_time >= 10:
+                break
         return self
 
     def find_minimal_distances(self, node):

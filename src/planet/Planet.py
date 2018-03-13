@@ -1,6 +1,7 @@
 from shortest_path.ShortestPath import ShortestPath
 from events.EventRegistry import EventRegistry
 from events.EventNames import EventNames
+from events.EventList import EventList
 from pilot.PilotModes import PilotModes
 from .Direction import Direction
 from .Edge import Edge
@@ -15,11 +16,14 @@ class Planet(Graph):
         super().__init__({}, {})
         self.shortest_path = None
         self.shortest_path_counter = 0
+        self.shortest_path_running = False
         self.curr_vertex = None
         self.curr_path = None
         self.target = None
         self.mode = PilotModes.EXPLORE
         self.paths = {}
+        self.events = EventList()
+        self.events.add(EventNames.EXPLORATION_FINISHED)
         EventRegistry.instance().register_event_handler(EventNames.SHORTEST_PATH, self.set_shortest_path)
         pass
 
@@ -78,6 +82,7 @@ class Planet(Graph):
         pass
 
     def set_target_mode(self):
+        print('TARGET MODE')
         self.mode = EventNames.TARGET
         pass
 
@@ -92,6 +97,7 @@ class Planet(Graph):
         return self.paths
 
     def get_shortest_path(self, end: Vertex):
+        self.shortest_path_counter = 0
         sp = ShortestPath(self, self.curr_vertex, end)
         sp.run()
         pass
@@ -105,16 +111,31 @@ class Planet(Graph):
                         self.curr_path = path
                         print('next path: ', self.curr_path)
                         return self.curr_path
-                for edge in self.edges.values():
-                    if self.curr_vertex.equals(edge.start) and edge.weight != -1 and edge.known == 0:
-                        edge.known += 1
+                paths = list(self.paths.values())
+                if paths.__len__() > 0:
+                    path = paths[0]
+                    if not self.shortest_path_running:
+                        self.get_shortest_path(path.source)
+                        self.shortest_path_running = True
+                    if self.shortest_path and self.shortest_path.__len__() > 0:
+                        edge = self.shortest_path[self.shortest_path_counter]
+                        self.shortest_path_counter += 1
                         self.curr_path = Path(edge.start, edge.start_direction)
-                        print('next path: ', self.curr_path)
+                        print('next path: ', self.curr_path, ' sp_counter = ' + str(self.shortest_path_counter))
                         return self.curr_path
-                print('I am stuck here!')
-        elif self.mode == PilotModes.TARGET and self.shortest_path:
+                else:
+                    self.events.set(EventNames.EXPLORATION_FINISHED, True)
+                # for edge in self.edges.values():
+                #     if self.curr_vertex.equals(edge.start) and edge.weight != -1 and edge.known == 0:
+                #         edge.known += 1
+                #         self.curr_path = Path(edge.start, edge.start_direction)
+                #         print('next path: ', self.curr_path)
+                #         return self.curr_path
+        elif self.mode == PilotModes.TARGET and self.shortest_path.__len__() > 0:
             edge = self.shortest_path[self.shortest_path_counter]
             self.shortest_path_counter += 1
-            return Path(edge.start, edge.start_direction)
+            self.curr_path = Path(edge.start, edge.start_direction)
+            print('next path: ', self.curr_path, ' sp_counter = ' + str(self.shortest_path_counter))
+            return self.curr_path
         else:
             return False

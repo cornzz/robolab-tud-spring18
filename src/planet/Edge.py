@@ -10,7 +10,6 @@ class Edge:
         self.start_direction = start_direction
         self.end_direction = end_direction
         self.weight = weight
-        self.known = 0
         pass
 
     def set_weight(self, weight):

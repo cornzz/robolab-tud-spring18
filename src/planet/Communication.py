@@ -10,7 +10,7 @@ PORT = 8883
 
 
 class Communication:
-    def __init__(self, planet):
+    def __init__(self, planet, odometry):
         self.CHANNEL = 'explorer/050'
         self.planet = planet
         self.is_connected = False
@@ -19,6 +19,7 @@ class Communication:
         self.client.username_pw_set('050', password='Cbqs7BF5LS')
         self.edge_send = None
         self.test_planet = 'Vulcan'
+        self.odometry = odometry
 
     def receive(self, client, data, message):
         if message:
@@ -58,6 +59,10 @@ class Communication:
     # ---------------
     # MESSAGES - OUT
     # ---------------
+    def hallo_kilian(self):
+        self.emit('HALLO KILIAN! :D')
+        pass
+
     def send_test_planet(self):
         self.emit('testplanet ' + self.test_planet)
         pass
@@ -96,18 +101,28 @@ class Communication:
 
         start_x = int(start[0])
         start_y = int(start[1])
-        start_direction = int(start[2])
+        start_direction = Direction.num(start[2])
         end_x = int(end[0])
         end_y = int(end[1])
-        end_direction = int(end[2])
+        end_direction = Direction.num(end[2])
 
         start_vertex = Vertex((start_x, start_y))
         end_vertex = Vertex((end_x, end_y))
         edge = Edge(start_vertex, end_vertex, start_direction, end_direction, float(weight))
-        edge.known = self.edge_send.known
-        if self.edge_send and edge.start.equals(self.edge_send.start):
+        print('edges: ', edge, self.edge_send)
+        if self.edge_send is not None and edge is not None and edge.start.position == self.edge_send.start.position:
+            self.planet.vertexes[edge.end.id] = edge.end
+            self.planet.set_curr_vertex(edge.end)
+            self.odometry.set_position(edge.end.position)
+            self.planet.edges[edge.id] = edge
+            print('edge changes applied: ', self.planet.edges[edge.id])
             if self.edge_send in self.planet.edges:
                 del self.planet.edges[self.edge_send.id]
+            if self.edge_send.end in self.planet.vertexes:
+                del self.planet.vertexes[self.edge_send.end.id]
+        else:
+            self.planet.vertexes[edge.start.id] = edge.start
+            self.planet.vertexes[edge.end.id] = edge.end
             self.planet.edges[edge.id] = edge
         self.edge_send = None
         pass

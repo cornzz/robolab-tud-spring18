@@ -15,13 +15,13 @@ from typing import Tuple
 import time
 
 # constants
-K_P = 0.62
-K_I = 0.075
-K_D = 0.35
+K_P = 0.6
+K_I = 0.1
+K_D = 0.3
 I_MAX = 100
 SETPOINT = 330
-SPEED_MAX = 100
-SPEED_MIN = -100
+SPEED_MAX = 50
+SPEED_MIN = -50
 BASE_SPEED = 30
 
 
@@ -51,7 +51,9 @@ class Pilot:
         self.communication = communication
         self.mixer = MotorMixer(BASE_SPEED, SPEED_MIN, SPEED_MAX)
         self.mc = MotorController(K_P, K_I, K_D, I_MAX, SETPOINT)
-        self.remove_set_color = EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
+        self.events = EventList()
+        self.events.add(EventNames.TARGET_REACHED)
+        EventRegistry.instance().register_event_handler(EventNames.COLOR, self.set_color)
         EventRegistry.instance().register_event_handler(EventNames.TOUCH, self.set_touch)
         EventRegistry.instance().register_event_handler(EventNames.POSITION, self.set_position)
         pass
@@ -63,6 +65,8 @@ class Pilot:
             self.check_isc()
         elif self.mode == PilotModes.CHOOSE_PATH:
             self.choose_path()
+        elif self.mode == PilotModes.BLOCKED:
+            self.blocked_path()
         pass
 
     # ---------
@@ -86,18 +90,18 @@ class Pilot:
 
     def blocked_path(self):
         self.stop_motors()
-        self.lm.command = 'reset'
-        self.rm.command = 'reset'
+        self.status = 'blocked'
         time.sleep(0.3)
         print('path blocked.')
         self.lm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
-        self.wait(self.lm.position, 200, 200)
+        self.wait(200, 200)
         self.turn_odo(90)
         self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
-        self.wait(self.lm.position, 60, 200)
+        self.wait(60, 200)
         self.turn_odo(90)
+        self.mode = PilotModes.FOLLOW_LINE_ODO
         pass
 
     def turn_motor(self, motor, degrees):
@@ -125,7 +129,7 @@ class Pilot:
         self.lm.run_to_rel_pos(position_sp=-p_sp, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=p_sp, speed_sp=200, stop_action="hold")
         print('Turning: ' + str(degrees) + ' degrees.')
-        self.wait(self.rm.position, p_sp, 200)
+        self.wait(p_sp, 200)
         # duration = abs(degrees) / 90 * 1.3
         # time.sleep(duration)
         pass
@@ -135,13 +139,19 @@ class Pilot:
         self.stop_motors()
         self.odometry.add_pos()
         print(self.position)
+        self.communication.start()
         if self.counter == 0:
             self.communication.send_ready()
-            time.sleep(1)
         vertex = self.planet.vertex_exists((self.position[0], self.position[1]))
         existing_vertex = bool(vertex)
         if not existing_vertex:
             vertex = self.planet.add_vertex((self.position[0], self.position[1]))
+        if vertex.equals(self.planet.target):
+            self.events.set(EventNames.TARGET_REACHED, True)
+        if self.counter != 0 and self.status == 'blocked':
+            edge = self.planet.add_edge(self.planet.curr_path, self.planet.curr_path, -1)
+            print('new edge: ', edge)
+            self.communication.send_edge(edge, 'blocked')
         self.planet.set_curr_vertex(vertex)
         path = Path(vertex, (self.position[2] + Direction.SOUTH) % 360)
         if not existing_vertex:
@@ -175,17 +185,16 @@ class Pilot:
                 self.planet.add_path(self.planet.curr_vertex, path.direction)
             self.turn(90)
             pass
-        if self.counter != 0:
-            edge = None
-            if self.status == 'free':
-                edge = self.planet.add_edge(self.planet.curr_path, path, 0)
-            else:
-                edge = self.planet.add_edge(self.planet.curr_path, self.planet.curr_path, -1)
-                self.status = 'blocked'
-            if edge:
-                print('new edge: ', edge)
-                self.communication.send_edge(edge, self.status)
+        if self.counter != 0 and self.status == 'free':
+            edge = self.planet.add_edge(self.planet.curr_path, path, 0)
+            print('new edge: ', edge)
+            self.communication.send_edge(edge, 'free')
+        if self.status == 'blocked':
+            self.status = 'free'
         self.counter += 1
+        print('waiting for messages from server!')
+        time.sleep(2)
+        self.communication.stop()
         self.lm.command = 'reset'
         self.rm.command = 'reset'
         # self.stop_motors()
@@ -209,55 +218,51 @@ class Pilot:
             if turn_direction == -90:  # East (relative)
                 self.lm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 75, 200)
+                self.wait(75, 200)
                 self.turn_odo(turn_direction)
                 self.lm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 75, 200)
+                self.wait(75, 200)
             elif turn_direction == 0:  # North (relative)
                 self.lm.run_to_rel_pos(position_sp=150, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=150, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 150, 200)
+                self.wait(150, 200)
             elif turn_direction == 90:  # West (relative)
                 self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 100, 200)
+                self.wait(100, 200)
                 self.turn_odo(turn_direction)
                 self.lm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 90, 200)
+                self.wait(90, 200)
             elif turn_direction == 180 or turn_direction == -180:  # South (relative)
                 self.lm.run_to_rel_pos(position_sp=80, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=80, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 80, 200)
+                self.wait(80, 200)
                 self.turn_odo(90)
                 self.lm.run_to_rel_pos(position_sp=50, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=50, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 50, 200)
+                self.wait(50, 200)
                 self.turn_odo(90)
                 self.lm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
-                self.wait(self.lm.position, 90, 200)
+                self.wait(90, 200)
 
             time.sleep(1)
 
             self.mode = PilotModes.FOLLOW_LINE_ODO
         pass
 
-    def wait(self, start_pos, target_pos, speed):
+    def wait(self, target_pos, speed):
         i = 5
         target_pos = abs(target_pos)
-        start_pos = abs(start_pos)
-        error = 0.01 * target_pos
         dt = target_pos / speed + 0.5  # dt in s
         start = time.time()
-        while self.lm.position - start_pos <= target_pos - error:
+        while time.time() - start <= dt:
             if i == 5:
                 self.odometry.read_in((self.lm.position, self.rm.position))
                 i = 0
             i += 1
-            if time.time() - start >= dt:
-                break
 
     def test(self, value, value2):
         print('test()')
@@ -297,6 +302,9 @@ class Pilot:
 
     def set_touch(self, value):
         self.touch = value
+        if value:
+            print('touch: ', str(value))
+            self.mode = PilotModes.BLOCKED
         pass
 
     def set_speed(self, speed: Tuple[int, int]):
