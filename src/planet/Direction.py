@@ -33,6 +33,19 @@ class Direction(IntEnum):
             raise ParseDirectionException(value)
 
     @staticmethod
+    def num(value):
+        if value == 'N':
+            return Direction.NORTH
+        elif value == 'E':
+            return Direction.EAST
+        elif value == 'S':
+            return Direction.SOUTH
+        elif value == 'W':
+            return Direction.WEST
+        else:
+            raise ParseDirectionException(value)
+
+    @staticmethod
     def format(value):
         if 315 <= value <= 360 or 0 <= value <= 45:
             value = 0

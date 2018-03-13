@@ -30,6 +30,7 @@ def init(lm, rm, cs, ts, odometry, pilot):
 
 
 def run():
+    communication.start()
     # init classes
     lm.position = 0
     rm.position = 0
