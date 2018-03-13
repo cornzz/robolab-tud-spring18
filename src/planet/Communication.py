@@ -118,8 +118,10 @@ class Communication:
             print('edge changes applied: ', self.planet.edges[edge.id])
             if self.edge_send in self.planet.edges:
                 del self.planet.edges[self.edge_send.id]
+                print('edge deleted: ', self.edge_send.id)
             if self.edge_send.end in self.planet.vertexes:
                 del self.planet.vertexes[self.edge_send.end.id]
+                print('vertex deleted: ', self.edge_send.end.id)
         else:
             self.planet.vertexes[edge.start.id] = edge.start
             self.planet.vertexes[edge.end.id] = edge.end

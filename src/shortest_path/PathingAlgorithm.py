@@ -18,6 +18,8 @@ class PathingAlgorithm(threading.Thread):
 
     def get_distance(self, node, target):
         for edge in self.edges.values():
+            if edge.weight == -1:
+                return 1000000
             if edge.start.equals(node) and edge.end.equals(target):
                 return edge.weight
 
@@ -42,7 +44,7 @@ class PathingAlgorithm(threading.Thread):
     def get_shortest_distance(self, end):
         d = self.distance.get(end.position)
         if d is None:
-            return 1000000000
+            return 1000000
         else:
             return d
 
