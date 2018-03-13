@@ -36,7 +36,7 @@ class Planet(Graph):
                 del self.paths[end.id]
             self.edges[edge_from.id] = edge_from
             self.edges[edge_to.id] = edge_to
-            return edge_from, edge_to
+            return edge_from
         else:
             return None
 
