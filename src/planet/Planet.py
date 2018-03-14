@@ -106,18 +106,23 @@ class Planet(Graph):
         if self.mode == PilotModes.EXPLORE:
             # depth first
             if self.curr_vertex:
+                paths = list(self.paths.values())
+                print('paths left:')
+                for path in paths:
+                    print(path)
                 for path in self.paths.values():
                     if self.curr_vertex.equals(path.source):
                         self.curr_path = path
                         print('next path: ', self.curr_path)
                         return self.curr_path
-                paths = list(self.paths.values())
                 if paths.__len__() > 0:
                     path = paths[0]
                     if not self.shortest_path_running:
                         self.get_shortest_path(path.source)
                         self.shortest_path_running = True
-                    if self.shortest_path and self.shortest_path.__len__() > 0:
+                    if self.shortest_path \
+                            and self.shortest_path.__len__() > 0 \
+                            and self.shortest_path_counter < self.shortest_path.__len__():
                         edge = self.shortest_path[self.shortest_path_counter]
                         self.shortest_path_counter += 1
                         self.curr_path = Path(edge.start, edge.start_direction)

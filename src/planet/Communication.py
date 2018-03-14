@@ -122,6 +122,9 @@ class Communication:
             if self.edge_send.end in self.planet.vertexes:
                 del self.planet.vertexes[self.edge_send.end.id]
                 print('vertex deleted: ', self.edge_send.end.id)
+            for path in self.planet.paths.values():
+                if self.edge_send.start == path.source.position:
+                    self.planet.paths[path.id] = Path(edge.start, path.direction)
         else:
             self.planet.vertexes[edge.start.id] = edge.start
             self.planet.vertexes[edge.end.id] = edge.end

@@ -93,9 +93,9 @@ class Pilot:
         self.status = 'blocked'
         time.sleep(0.3)
         print('path blocked.')
-        self.lm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
-        self.rm.run_to_rel_pos(position_sp=-200, speed_sp=200, stop_action="hold")
-        self.wait(200, 200)
+        self.lm.run_to_rel_pos(position_sp=-250, speed_sp=200, stop_action="hold")
+        self.rm.run_to_rel_pos(position_sp=-250, speed_sp=200, stop_action="hold")
+        self.wait(250, 200)
         self.turn_odo(90)
         self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
         self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
@@ -158,6 +158,15 @@ class Pilot:
             self.turn(-90)
             print('Turning: 362 degrees.')
 
+        if self.counter != 0:
+            self.planet.add_path(self.planet.curr_vertex, path.direction)
+        if self.counter != 0 and self.status == 'free':
+            edge = self.planet.add_edge(self.planet.curr_path, path, 0)
+            print('new edge: ', edge)
+            self.communication.send_edge(edge, 'free')
+            time.sleep(1)
+
+        if not existing_vertex:
             self.rm.position = 0
             target_pos = self.turn_motor('rm', 362)
             eighth = target_pos / 8
@@ -181,14 +190,8 @@ class Pilot:
                     # print('path detected: ' + str(direction))
                     self.planet.add_path(self.planet.curr_vertex, direction)
                     time.sleep(0.5)
-            if self.counter != 0:
-                self.planet.add_path(self.planet.curr_vertex, path.direction)
             self.turn(90)
             pass
-        if self.counter != 0 and self.status == 'free':
-            edge = self.planet.add_edge(self.planet.curr_path, path, 0)
-            print('new edge: ', edge)
-            self.communication.send_edge(edge, 'free')
         if self.status == 'blocked':
             self.status = 'free'
         self.counter += 1
@@ -216,9 +219,9 @@ class Pilot:
                 turn_direction = 90
 
             if turn_direction == -90:  # East (relative)
-                self.lm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
-                self.wait(75, 200)
+                self.lm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=60, speed_sp=200, stop_action="hold")
+                self.wait(60, 200)
                 self.turn_odo(turn_direction)
                 self.lm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=75, speed_sp=200, stop_action="hold")
@@ -228,9 +231,9 @@ class Pilot:
                 self.rm.run_to_rel_pos(position_sp=150, speed_sp=200, stop_action="hold")
                 self.wait(150, 200)
             elif turn_direction == 90:  # West (relative)
-                self.lm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
-                self.rm.run_to_rel_pos(position_sp=100, speed_sp=200, stop_action="hold")
-                self.wait(100, 200)
+                self.lm.run_to_rel_pos(position_sp=110, speed_sp=200, stop_action="hold")
+                self.rm.run_to_rel_pos(position_sp=110, speed_sp=200, stop_action="hold")
+                self.wait(110, 200)
                 self.turn_odo(turn_direction)
                 self.lm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
                 self.rm.run_to_rel_pos(position_sp=90, speed_sp=200, stop_action="hold")
@@ -305,6 +308,7 @@ class Pilot:
         if value:
             print('touch: ', str(value))
             self.mode = PilotModes.BLOCKED
+            ev3.Sound.beep()
         pass
 
     def set_speed(self, speed: Tuple[int, int]):
