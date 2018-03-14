@@ -1,8 +1,8 @@
-from shortest_path.ShortestPath import ShortestPath
-from events.EventRegistry import EventRegistry
-from events.EventNames import EventNames
-from events.EventList import EventList
-from pilot.PilotModes import PilotModes
+from src.shortest_path.ShortestPath import ShortestPath
+from src.events.EventRegistry import EventRegistry
+from src.events.EventNames import EventNames
+from src.events.EventList import EventList
+from src.pilot.PilotModes import PilotModes
 from .Direction import Direction
 from .Edge import Edge
 from .Graph import Graph
@@ -35,10 +35,10 @@ class Planet(Graph):
         edge_from = Edge(end.source, start.source, end.direction, start.direction, length)
         if edge_from.id not in self.edges and edge_to.id not in self.edges:
             if start.id in self.paths:
-                print('deleting path: ', self.paths[start.id])
+                # print('deleting path: ', self.paths[start.id])
                 del self.paths[start.id]
             if end.id in self.paths:
-                print('deleting path: ', self.paths[end.id])
+                # print('deleting path: ', self.paths[end.id])
                 del self.paths[end.id]
             self.edges[edge_from.id] = edge_from
             self.edges[edge_to.id] = edge_to
@@ -58,7 +58,7 @@ class Planet(Graph):
         path = Path(source, direction)
         if path.id not in self.paths:
             self.paths[path.id] = path
-            print('new path: ' + str(path))
+            # print('new Vertex: ' + str(path))
             return path
         else:
             return None

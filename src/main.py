@@ -1,14 +1,14 @@
-from events.EventRegistry import EventRegistry
-from events.EventNames import EventNames
-from pilot.ColorSensor import ColorSensor
-from pilot.TouchSensor import TouchSensor
-from pilot.PilotModes import PilotModes
-from pilot.Odometry import Odometry
-from pilot.Pilot import Pilot
-from planet.Planet import Planet
-from planet.Communication import Communication
-from pilot.MotorMixer import MotorMixer
-from pilot.MotorController import MotorController
+from src.events.EventRegistry import EventRegistry
+from src.events.EventNames import EventNames
+from src.pilot.ColorSensor import ColorSensor
+from src.pilot.TouchSensor import TouchSensor
+from src.pilot.PilotModes import PilotModes
+from src.pilot.Odometry import Odometry
+from src.pilot.Pilot import Pilot
+from src.planet.Planet import Planet
+from src.planet.Communication import Communication
+from src.pilot.MotorMixer import MotorMixer
+from src.pilot.MotorController import MotorController
 import ev3dev.ev3 as ev3
 import time
 
@@ -19,7 +19,7 @@ speed_max = 50
 speed_min = -50
 base_speed = 30
 
-btn = ev3.Button()
+# btn = ev3.Button()
 lm = ev3.LargeMotor('outA')
 rm = ev3.LargeMotor('outD')
 cs = ColorSensor()
@@ -54,24 +54,24 @@ def run():
     rm.position = 0
     i = 0
     # this is the main loop
-    while not btn.any() or main.stop:
-        # read from sensors
-        # sensor classes emit events with fresh input
-        # classes that depend on should register to those events
-        ts.read_in()
-        if i == 5 and pilot.mode == PilotModes.FOLLOW_LINE_ODO or pilot.mode == PilotModes.BLOCKED:
-            odometry.read_in((lm.position, rm.position))
-            i = 0
-        if pilot.mode == PilotModes.FOLLOW_LINE or pilot.mode == PilotModes.FOLLOW_LINE_ODO:
-            cs.read_in()
-        # switch PILOT_MODE and run corresponding maneuver
-        pilot.run()
-        if i == 5:
-            i = 0
-        i += 1
-    # pilot.test(40, -90)
-    pilot.stop_motors()
-    communication.stop()
+    # while not btn.any() or main.stop:
+    #     # read from sensors
+    #     # sensor classes emit events with fresh input
+    #     # classes that depend on should register to those events
+    #     ts.read_in()
+    #     if i == 5 and pilot.mode == PilotModes.FOLLOW_LINE_ODO or pilot.mode == PilotModes.BLOCKED:
+    #         odometry.read_in((lm.position, rm.position))
+    #         i = 0
+    #     if pilot.mode == PilotModes.FOLLOW_LINE or pilot.mode == PilotModes.FOLLOW_LINE_ODO:
+    #         cs.read_in()
+    #     # switch PILOT_MODE and run corresponding maneuver
+    #     pilot.run()
+    #     if i == 5:
+    #         i = 0
+    #     i += 1
+    # # pilot.test(40, -90)
+    # pilot.stop_motors()
+    # communication.stop()
     pass
 
 

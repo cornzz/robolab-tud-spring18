@@ -1,5 +1,5 @@
-from events.EventNames import EventNames
-from events.EventList import EventList
+from src.events.EventNames import EventNames
+from src.events.EventList import EventList
 import ev3dev.ev3 as ev3
 
 

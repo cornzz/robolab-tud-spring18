@@ -1,5 +1,5 @@
-from events.EventNames import EventNames
-from events.EventList import EventList
+from src.events.EventNames import EventNames
+from src.events.EventList import EventList
 import ev3dev.ev3 as ev3
 # import colorsys
 # import sys
@@ -16,7 +16,7 @@ WHITE = "\033[;1m"
 class ColorSensor:
     def __init__(self):
         self.cs = ev3.ColorSensor('in1')
-        self.cs.mode = 'RGB-RAW'
+        # self.cs.mode = 'RGB-RAW'
         self.events = EventList()
         self.events.add(EventNames.COLOR)
 

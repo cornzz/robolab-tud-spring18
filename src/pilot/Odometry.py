@@ -1,7 +1,7 @@
 from typing import Tuple
-from planet.Direction import Direction
-from events.EventList import EventList
-from events.EventNames import EventNames
+from src.planet.Direction import Direction
+from src.events.EventList import EventList
+from src.events.EventNames import EventNames
 import math
 
 # constants

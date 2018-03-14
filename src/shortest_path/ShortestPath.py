@@ -1,6 +1,6 @@
 from . import PathingAlgorithm
-from events.EventList import EventList
-from events.EventNames import EventNames
+from src.events.EventList import EventList
+from src.events.EventNames import EventNames
 import time
 
 
@@ -19,14 +19,13 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
     def execute(self):
         self.distance[self.start.position] = 0
         self.unSettledNodes.append(self.start)
-
         while self.unSettledNodes.__len__() > 0:
             node = self.get_minimum(self.unSettledNodes)
             self.settledNodes.append(node)
             self.unSettledNodes.remove(node)
             self.find_minimal_distances(node)
-            if time.time() - self.start_time >= 10:
-                break
+            # if time.time() - self.start_time >= 10:
+            #     break
         return self
 
     def find_minimal_distances(self, node):
@@ -37,6 +36,7 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
                 > self.get_shortest_distance(node) + self.get_distance(node, target)
             ):
                 self.distance[target.position] = self.get_shortest_distance(node) + self.get_distance(node, target)
+                # print(node)
                 self.predecessors[target.position] = node
                 self.unSettledNodes.append(target)
         pass
@@ -55,20 +55,17 @@ class ShortestPath(PathingAlgorithm.PathingAlgorithm):
         vertexes.pop()
         vertexes.reverse()
         path = []
-        length = vertexes.__len__() - 2
-        if length > 0:
-            for i in range(vertexes.__len__() - 1):
-                if i >= 0:
-                    for e in self.edges.values():
-                        if vertexes[i].equals(e.start) and vertexes[i + 1].equals(e.end):
-                            path.append(e)
-
+        length = vertexes.__len__() - 1
+        for i in range(max(0, length)):
+            for e in self.edges.values():
+                if vertexes[i].equals(e.start) and vertexes[i + 1].equals(e.end):
+                    path.append(e)
         return path
 
     def run(self):
         print('ShortestPath Thread started!')
-
-        path = self.execute().get_path()
+        self.execute()
+        path = self.get_path()
         self.events.set(EventNames.SHORTEST_PATH, path)
         print('ShortestPath Thread finished!')
         pass

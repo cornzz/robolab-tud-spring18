@@ -3,13 +3,13 @@ from .MotorController import MotorController
 from .MotorMixer import MotorMixer
 from .PilotModes import PilotModes
 from .Odometry import Odometry
-from events.EventNames import EventNames
-from events.EventRegistry import EventRegistry
-from events.EventList import EventList
-from planet.Communication import Communication
-from planet.Direction import Direction
-from planet.Planet import Planet
-from planet.Path import Path
+from src.events.EventNames import EventNames
+from src.events.EventRegistry import EventRegistry
+from src.events.EventList import EventList
+from src.planet.Communication import Communication
+from src.planet.Direction import Direction
+from src.planet.Planet import Planet
+from src.planet.Path import Path
 from ev3dev import ev3
 from typing import Tuple
 import time

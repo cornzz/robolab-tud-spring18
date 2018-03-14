@@ -18,9 +18,11 @@ class PathingAlgorithm(threading.Thread):
 
     def get_distance(self, node, target):
         for edge in self.edges.values():
-            if edge.weight == -1:
+            if edge.weight == -1 or edge.start.equals(edge.end):
                 return 1000000
             if edge.start.equals(node) and edge.end.equals(target):
+                print('distance '
+                      '', edge)
                 return edge.weight
 
     def get_neighbors(self, node):
