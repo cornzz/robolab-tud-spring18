@@ -30,10 +30,10 @@ class Planet(Graph):
     # ---------
     # GRAPH MANIPULATION
     # ---------
-    def add_edge(self, start: Path, end: Path, length: float):
+    def add_edge(self, start: Path, end: Path, length: float, flag):
         edge_to = Edge(start.source, end.source, start.direction, end.direction, length)
         edge_from = Edge(end.source, start.source, end.direction, start.direction, length)
-        if edge_from.id not in self.edges and edge_to.id not in self.edges:
+        if flag or (edge_from.id not in self.edges and edge_to.id not in self.edges):
             if start.id in self.paths:
                 print('deleting path: ', self.paths[start.id])
                 del self.paths[start.id]
@@ -64,10 +64,10 @@ class Planet(Graph):
             return None
 
     def vertex_exists(self, position):
-        if position in self.vertexes:
-            return self.vertexes[position]
-        else:
-            return False
+        for vertex in self.vertexes.values():
+            if vertex.position == position:
+                return vertex
+        return False
 
     # ---------
     # SETTER
@@ -83,11 +83,12 @@ class Planet(Graph):
 
     def set_target_mode(self):
         print('TARGET MODE')
-        self.mode = EventNames.TARGET
+        self.mode = PilotModes.TARGET
         pass
 
     def set_target(self, target):
         self.target = target
+        print('target saved!')
         pass
 
     # ---------
@@ -103,6 +104,7 @@ class Planet(Graph):
         pass
 
     def get_next_path(self):
+        print(self.mode, self.mode == PilotModes.TARGET)
         if self.mode == PilotModes.EXPLORE:
             # depth first
             if self.curr_vertex:
@@ -130,17 +132,19 @@ class Planet(Graph):
                         return self.curr_path
                 else:
                     self.events.set(EventNames.EXPLORATION_FINISHED, True)
-                # for edge in self.edges.values():
-                #     if self.curr_vertex.equals(edge.start) and edge.weight != -1 and edge.known == 0:
-                #         edge.known += 1
-                #         self.curr_path = Path(edge.start, edge.start_direction)
-                #         print('next path: ', self.curr_path)
-                #         return self.curr_path
-        elif self.mode == PilotModes.TARGET and self.shortest_path.__len__() > 0:
-            edge = self.shortest_path[self.shortest_path_counter]
-            self.shortest_path_counter += 1
-            self.curr_path = Path(edge.start, edge.start_direction)
-            print('next path: ', self.curr_path, ' sp_counter = ' + str(self.shortest_path_counter))
-            return self.curr_path
+                    return False
+        if self.mode == PilotModes.TARGET:
+            print('shortest path is:')
+            if self.shortest_path.__len__() > 0:
+                for edge in self.shortest_path:
+                    print(edge)
+                edge = self.shortest_path[self.shortest_path_counter]
+                self.shortest_path_counter += 1
+                self.curr_path = Path(edge.start, edge.start_direction)
+                print('next path: ', self.curr_path, ' sp_counter = ' + str(self.shortest_path_counter))
+                return self.curr_path
+            else:
+                print('shortest path not working or target not reachable!')
+                return False
         else:
             return False

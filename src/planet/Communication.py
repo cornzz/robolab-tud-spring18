@@ -126,20 +126,26 @@ class Communication:
                 if self.edge_send.start == path.source.position:
                     self.planet.paths[path.id] = Path(edge.start, path.direction)
         else:
+            path_to = Path(edge.start, edge.start_direction)
+            path_from = Path(edge.end, edge.end_direction)
             self.planet.vertexes[edge.start.id] = edge.start
             self.planet.vertexes[edge.end.id] = edge.end
-            self.planet.edges[edge.id] = edge
+            self.planet.add_edge(path_to, path_from, float(weight), True)
         self.edge_send = None
         pass
 
     def receive_target(self, target):
         target = target.split(',')
-        vertex = self.planet.vertex_exists((target[0], target[1]))
+        target_pos = (int(target[0]), int(target[1]))
+        print('received target: ', target, target_pos)
+        vertex = self.planet.vertex_exists(target_pos)
         if vertex:
+            print('Target known!')
             self.planet.get_shortest_path(vertex)
             self.planet.set_target_mode()
         else:
-            vertex = self.planet.add_vertex((target[0], target[1]))
+            print('Target unknown!')
+            vertex = self.planet.add_vertex(target_pos)
         self.planet.set_target(vertex)
         pass
 

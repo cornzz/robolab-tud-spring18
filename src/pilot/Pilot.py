@@ -149,7 +149,7 @@ class Pilot:
         if vertex.equals(self.planet.target):
             self.events.set(EventNames.TARGET_REACHED, True)
         if self.counter != 0 and self.status == 'blocked':
-            edge = self.planet.add_edge(self.planet.curr_path, self.planet.curr_path, -1)
+            edge = self.planet.add_edge(self.planet.curr_path, self.planet.curr_path, -1, False)
             print('new edge: ', edge)
             self.communication.send_edge(edge, 'blocked')
         self.planet.set_curr_vertex(vertex)
@@ -161,7 +161,7 @@ class Pilot:
         if self.counter != 0:
             self.planet.add_path(self.planet.curr_vertex, path.direction)
         if self.counter != 0 and self.status == 'free':
-            edge = self.planet.add_edge(self.planet.curr_path, path, 0)
+            edge = self.planet.add_edge(self.planet.curr_path, path, 0, False)
             print('new edge: ', edge)
             self.communication.send_edge(edge, 'free')
             time.sleep(1)
